@@ -1,0 +1,12 @@
+.env
+compose.override.yaml
+update-state/*
+!update-state/.gitkeep
+.update-backup/
+dist/
+*.tar
+*.tar.gz
+*.zip
+*.log
+__pycache__/
+*.pyc

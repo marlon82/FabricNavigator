@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Topology group</title>
+  <desc id="desc">A purple container holding three connected network devices.</desc>
+  <defs>
+    <linearGradient id="shell" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9b8ff"/>
+      <stop offset="0.48" stop-color="#8f38df"/>
+      <stop offset="1" stop-color="#53119b"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#251044"/>
+      <stop offset="1" stop-color="#0c1025"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#16052e" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M44 78c0-18 14-32 32-32h58l18 20h92c18 0 32 14 32 32v144c0 18-14 32-32 32H76c-18 0-32-14-32-32z" fill="url(#shell)" stroke="#efe2ff" stroke-width="7"/>
+    <rect x="62" y="91" width="196" height="146" rx="24" fill="url(#panel)" stroke="#c48cff" stroke-width="4"/>
+    <path d="M107 145h106M160 145v38" fill="none" stroke="#ba79ff" stroke-width="8" stroke-linecap="round"/>
+    <g fill="#f7f1ff" stroke="#8128d0" stroke-width="5">
+      <rect x="78" y="121" width="58" height="48" rx="12"/>
+      <rect x="184" y="121" width="58" height="48" rx="12"/>
+      <rect x="131" y="181" width="58" height="42" rx="12"/>
+    </g>
+    <g fill="#7e24cc">
+      <circle cx="92" cy="145" r="5"/><circle cx="107" cy="145" r="5"/><circle cx="122" cy="145" r="5"/>
+      <circle cx="198" cy="145" r="5"/><circle cx="213" cy="145" r="5"/><circle cx="228" cy="145" r="5"/>
+      <circle cx="145" cy="202" r="5"/><circle cx="160" cy="202" r="5"/><circle cx="175" cy="202" r="5"/>
+    </g>
+  </g>
+</svg>

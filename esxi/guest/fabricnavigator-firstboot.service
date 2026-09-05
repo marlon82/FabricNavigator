@@ -1,0 +1,15 @@
+[Unit]
+Description=FabricNavigator first-boot provisioning
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/var/lib/fabricnavigator-firstboot.complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/fabricnavigator-firstboot
+RemainAfterExit=yes
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+

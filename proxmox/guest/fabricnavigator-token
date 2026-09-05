@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+usage() {
+  echo "Usage: sudo fabricnavigator-token /path/to/github-update-token.txt" >&2
+  exit 2
+}
+
+[[ $# -eq 1 ]] || usage
+[[ $EUID -eq 0 ]] || { echo "Run this command with sudo." >&2; exit 1; }
+source_file=$1
+[[ -f "$source_file" ]] || { echo "Token file not found: $source_file" >&2; exit 1; }
+token=$(tr -d '\r\n' < "$source_file")
+[[ "$token" =~ ^[A-Za-z0-9_]{20,512}$ ]] || { echo "The token file has an invalid format." >&2; exit 1; }
+
+install -d -m 0700 /opt/fabricnavigator/secrets
+temporary=$(mktemp /opt/fabricnavigator/secrets/.github-token.XXXXXX)
+trap 'rm -f "$temporary"' EXIT
+printf '%s\n' "$token" > "$temporary"
+chmod 0600 "$temporary"
+mv -f "$temporary" /opt/fabricnavigator/secrets/github-update-token.txt
+trap - EXIT
+
+systemctl restart fabricnavigator-updater.service
+docker compose --project-directory /opt/fabricnavigator \
+  -f /opt/fabricnavigator/compose.yaml up -d --remove-orphans
+echo "GitHub update token installed. Its value was not displayed."
+

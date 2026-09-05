@@ -1,0 +1,19 @@
+[Unit]
+Description=FabricNavigator Linux update service
+Wants=network-online.target docker.service
+After=network-online.target docker.service fabricnavigator-firstboot.service
+ConditionPathExists=/var/lib/fabricnavigator-firstboot.complete
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/fabricnavigator
+ExecStart=/usr/bin/python3 /opt/fabricnavigator/fabricnavigator-updater.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/fabricnavigator /var/tmp /etc/netplan
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

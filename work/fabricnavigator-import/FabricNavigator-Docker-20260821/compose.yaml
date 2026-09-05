@@ -1,0 +1,106 @@
+services:
+  fabricnavigator:
+    image: fabricnavigator:2026-08-21
+    container_name: fabricnavigator
+    entrypoint: ["/bin/sh", "/opt/fabricnavigator/fabricnavigator-entrypoint.sh"]
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    environment:
+      FABRICNAVIGATOR_HTTPS_PORT: "8443"
+      FABRICNAVIGATOR_VERSION: "26.09.10.240"
+      FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
+      FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
+      FABRICNAVIGATOR_GITHUB_TOKEN_FILE: "/run/secrets/github-update-token.txt"
+      FABRICNAVIGATOR_ALLOW_TOKEN_WRITE: "true"
+      FABRICNAVIGATOR_UPDATE_DIR: "/opt/fabricnavigator/update"
+      ACLI_TERMINAL_REVISION: "20260824-121"
+      CATALINA_OPTS: "-Xms128M -Xmx512M -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dedm.public.baseUrl=https://localhost:8443"
+    ports:
+      - "8443:443"
+    volumes:
+      - ./fabricnavigator-nginx.conf.template:/etc/nginx/templates/fabricnavigator.conf.template:ro
+      - ./fabricnavigator-egress.nft:/etc/nftables.d/fabricnavigator-egress.nft:ro
+      - ./fabricnavigator-setenv.sh:/opt/tomcat/bin/setenv.sh:ro
+      - ./fabricnavigator-entrypoint.sh:/opt/fabricnavigator/fabricnavigator-entrypoint.sh:ro
+      - ./route-manager.py:/opt/fabricnavigator/route-manager.py:ro
+      - ./webview-proxy.py:/opt/fabricnavigator/webview-proxy.py:ro
+      - ./update-coordinator.py:/opt/fabricnavigator/update-coordinator.py:ro
+      - ./ssh-probe.pl:/opt/fabricnavigator/ssh-probe.pl:ro
+      - ./service-provision.pl:/opt/fabricnavigator/service-provision.pl:ro
+      - ../../acli-src/opt/acli/acli.pl:/opt/acli/acli-terminal.pl:ro
+      - ../../acli-src/opt/acli/AcliPm/HandleDeviceOutput.pm:/opt/acli/AcliPm/HandleDeviceOutput.pm:ro
+      - ../../acli-src/opt/acli/AcliPm/ExitHandlers.pm:/opt/acli/AcliPm/ExitHandlers.pm:ro
+      - ./acli-launch.pl:/opt/acli/acli-launch.pl:ro
+      - ../../acli-src/opt/acli-web/pty_bridge.py:/opt/acli-web/pty_bridge.py:ro
+      - ./acli-default.ini:/opt/acli-web/acli-default.ini:ro
+      - ../../../src/java:/opt/fabricnavigator/snmp-src:ro
+      - ../../../third_party/snmp4j/snmp4j-2.8.18.jar:/opt/fabricnavigator/snmp4j-2.8.18.jar:ro
+      - ../../fabricnavigator-security/fabricnavigator-security.jar:/opt/tomcat/lib/fabricnavigator-security.jar:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/terminal/index.jsp:/opt/tomcat/webapps/ROOT/terminal/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/webview-ticket.jsp:/opt/tomcat/webapps/ROOT/webview-ticket.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/session-info.jsp:/opt/tomcat/webapps/ROOT/session-info.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/user-preferences.jsp:/opt/tomcat/webapps/ROOT/user-preferences.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/profile/index.jsp:/opt/tomcat/webapps/ROOT/profile/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/credits/index.jsp:/opt/tomcat/webapps/ROOT/credits/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/profile/plugin-status.jsp:/opt/tomcat/webapps/ROOT/profile/plugin-status.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/not-found.jsp:/opt/tomcat/webapps/ROOT/not-found.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/WEB-INF/web.xml:/opt/tomcat/webapps/ROOT/WEB-INF/web.xml:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/login.jsp:/opt/tomcat/webapps/ROOT/login.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/setup.jsp:/opt/tomcat/webapps/ROOT/setup.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/setup-credentials.jsp:/opt/tomcat/webapps/ROOT/setup-credentials.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/index.jsp:/opt/tomcat/webapps/ROOT/topology/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/service-action.jsp:/opt/tomcat/webapps/ROOT/topology/service-action.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/ping-action.jsp:/opt/tomcat/webapps/ROOT/topology/ping-action.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/physical-ports.jsp:/opt/tomcat/webapps/ROOT/topology/physical-ports.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/snmp/get-variables.jsp:/opt/tomcat/webapps/ROOT/snmp/get-variables.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/devices/index.jsp:/opt/tomcat/webapps/ROOT/devices/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/index.jsp:/opt/tomcat/webapps/ROOT/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/index.jsp:/opt/tomcat/webapps/ROOT/admin/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/webview-profiles.jsp:/opt/tomcat/webapps/ROOT/admin/webview-profiles.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/credential-defaults.jsp:/opt/tomcat/webapps/ROOT/admin/credential-defaults.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/discovery.jsp:/opt/tomcat/webapps/ROOT/admin/discovery.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/acli-settings.jsp:/opt/tomcat/webapps/ROOT/admin/acli-settings.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/api.jsp:/opt/tomcat/webapps/ROOT/admin/api.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/api-sessions.jsp:/opt/tomcat/webapps/ROOT/api-sessions.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/system.jsp:/opt/tomcat/webapps/ROOT/admin/system.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/update.jsp:/opt/tomcat/webapps/ROOT/admin/update.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/update-channel.jsp:/opt/tomcat/webapps/ROOT/admin/update-channel.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/offline-package.jsp:/opt/tomcat/webapps/ROOT/admin/offline-package.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.js:/opt/tomcat/webapps/ROOT/assets/app-shell.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.css:/opt/tomcat/webapps/ROOT/assets/app-shell.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.js:/opt/tomcat/webapps/ROOT/assets/service-ui.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.css:/opt/tomcat/webapps/ROOT/assets/service-ui.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/update-channel.js:/opt/tomcat/webapps/ROOT/assets/update-channel.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/offline-packages.js:/opt/tomcat/webapps/ROOT/assets/offline-packages.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/user-profile.js:/opt/tomcat/webapps/ROOT/assets/user-profile.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/user-profile.css:/opt/tomcat/webapps/ROOT/assets/user-profile.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/topology-group.svg:/opt/tomcat/webapps/ROOT/assets/topology-group.svg:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/security.css:/opt/tomcat/webapps/ROOT/assets/security.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/setup-wizard.js:/opt/tomcat/webapps/ROOT/assets/setup-wizard.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/FabricNavigator_modern_transparent.png:/opt/tomcat/webapps/ROOT/assets/FabricNavigator_modern_transparent.png:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/FabricNavigator_modern_light.png:/opt/tomcat/webapps/ROOT/assets/FabricNavigator_modern_light.png:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/switch-front-universal.svg:/opt/tomcat/webapps/ROOT/assets/switch-front-universal.svg:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/switch-front-fabric.svg:/opt/tomcat/webapps/ROOT/assets/switch-front-fabric.svg:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/switch-front-switchengine.svg:/opt/tomcat/webapps/ROOT/assets/switch-front-switchengine.svg:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/generic-phone.png:/opt/tomcat/webapps/ROOT/assets/generic-phone.png:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/generic-switch.png:/opt/tomcat/webapps/ROOT/assets/generic-switch.png:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/generic-wlan-ap.png:/opt/tomcat/webapps/ROOT/assets/generic-wlan-ap.png:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/generic-firewall.png:/opt/tomcat/webapps/ROOT/assets/generic-firewall.png:ro
+      - fabricnavigator_security:/opt/fabricnavigator/data
+      - fabricnavigator_devices:/opt/tomcat/conf/edm-devices
+      - fabricnavigator_tls:/etc/nginx/tls
+      - ./plugins/extreme-device-images:/opt/tomcat/webapps/ROOT/assets/product-switches:ro
+      - ./update-state:/opt/fabricnavigator/update
+      - ./secrets:/run/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "curl -kfsS https://127.0.0.1/login.jsp >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  fabricnavigator_security:
+  fabricnavigator_devices:
+  fabricnavigator_tls:

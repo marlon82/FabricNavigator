@@ -1,0 +1,7 @@
+*.sh text eol=lf
+*.nft text eol=lf
+proxmox/guest/fabricnavigator-token text eol=lf
+proxmox/guest/*.py text eol=lf
+proxmox/guest/*.service text eol=lf
+linux/fabricnavigator-token text eol=lf
+

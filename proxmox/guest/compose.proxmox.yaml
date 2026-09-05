@@ -1,0 +1,6 @@
+services:
+  fabricnavigator:
+    # Docker's embedded resolver can incorrectly forward to systemd-resolved's
+    # loopback stub. Mount the real uplink resolver list on Proxmox guests.
+    volumes:
+      - /run/systemd/resolve/resolv.conf:/etc/resolv.conf:ro

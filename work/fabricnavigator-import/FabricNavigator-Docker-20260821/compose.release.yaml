@@ -1,0 +1,34 @@
+services:
+  fabricnavigator:
+    image: fabricnavigator:__VERSION__
+    container_name: fabricnavigator
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    environment:
+      FABRICNAVIGATOR_HTTPS_PORT: "8443"
+      FABRICNAVIGATOR_VERSION: "__VERSION__"
+      FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
+      FABRICNAVIGATOR_GITHUB_TOKEN_FILE: "/run/secrets/github-update-token.txt"
+      FABRICNAVIGATOR_UPDATE_DIR: "/opt/fabricnavigator/update"
+      CATALINA_OPTS: "-Xms128M -Xmx512M -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -Dedm.public.baseUrl=https://localhost:8443"
+    ports:
+      - "8443:443"
+    volumes:
+      - fabricnavigator_security:/opt/fabricnavigator/data
+      - fabricnavigator_devices:/opt/tomcat/conf/edm-devices
+      - fabricnavigator_tls:/etc/nginx/tls
+      - ./plugins/extreme-device-images:/opt/tomcat/webapps/ROOT/assets/product-switches:ro
+      - ./update-state:/opt/fabricnavigator/update
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -kfsS https://127.0.0.1/health.jsp >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  fabricnavigator_security:
+  fabricnavigator_devices:
+  fabricnavigator_tls:
