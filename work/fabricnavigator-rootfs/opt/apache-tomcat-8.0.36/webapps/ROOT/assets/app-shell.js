@@ -1,5 +1,5 @@
 (function(){'use strict';if(window.__fabricNavigatorShellV170)return;window.__fabricNavigatorShellV170=true;
-var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.251',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnAdminTab','fnAdminCredentialTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
+var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.252',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnAdminTab','fnAdminCredentialTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
 if(location.pathname.indexOf('/admin/')===0)document.documentElement.dataset.app='fabricnavigator-admin';
 if(location.pathname==='/devices/'||location.pathname==='/devices/index.jsp'){var obsoleteDeviceForm=document.getElementById('device-form'),obsoleteDeviceCard=obsoleteDeviceForm&&obsoleteDeviceForm.closest('aside.card');if(obsoleteDeviceCard)obsoleteDeviceCard.remove();}
 function saved(key){try{return localStorage.getItem(key);}catch(e){return null;}}
@@ -494,8 +494,9 @@ if(document.documentElement.classList.contains('fn-shell-loading')){var revealSt
 
 /* Automated switch configuration backups, version comparison, and restore. */
 (function(){
- if(location.pathname!=='/admin/'||document.querySelector('.fn-config-backup-admin-panel'))return;
- fetch('/admin/feature-status.jsp?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}).then(function(response){if(!response.ok)throw new Error('feature-status');return response.json();}).then(function(features){if(!features.configurationBackup)return;
+ if(location.pathname!=='/admin/'||document.querySelector('.fn-config-backup-admin-panel')||document.documentElement.dataset.fnConfigBackupInit)return;
+ document.documentElement.dataset.fnConfigBackupInit='pending';
+ fetch('/admin/feature-status.jsp?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}).then(function(response){if(!response.ok)throw new Error('feature-status');return response.json();}).then(function(features){if(!features.configurationBackup){document.documentElement.dataset.fnConfigBackupInit='disabled';return;}if(document.querySelector('.fn-config-backup-admin-panel')||document.getElementById('fn-admin-tab-config-backups'))return;document.documentElement.dataset.fnConfigBackupInit='ready';
  var nav=document.querySelector('.fn-admin-tabs'),grid=document.querySelector('main.page .grid');if(!nav||!grid)return;
  var de=(document.documentElement.lang||lang||'en').toLowerCase().indexOf('de')===0,tab=document.createElement('button');tab.type='button';tab.id='fn-admin-tab-config-backups';tab.className='fn-admin-tab';tab.dataset.tab='config-backups';tab.setAttribute('role','tab');tab.setAttribute('aria-selected','false');tab.tabIndex=-1;tab.textContent=de?'Konfigurations-Backups':'Configuration backups';
  var system=nav.querySelector('.fn-admin-system-tab');nav.insertBefore(tab,system||null);

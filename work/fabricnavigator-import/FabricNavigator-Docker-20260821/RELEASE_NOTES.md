@@ -1,4 +1,7 @@
-# FabricNavigator 26.09.10.251
+# FabricNavigator 26.09.10.252
+
+- Prevented duplicate Configuration backups entries when the feature is unlocked and the administration shell reloads.
+- Simplified the Features description by removing the administrator-password restriction notice.
 
 - Replaced administrator-password re-authentication with a separate developer-managed password for unlocking the configuration backup feature.
 - The default configuration backup feature password is `CONFIGBACKUP` and can be overridden with `FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD`.
