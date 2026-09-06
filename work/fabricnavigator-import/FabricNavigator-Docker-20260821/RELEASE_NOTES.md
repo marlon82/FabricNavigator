@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.266
+
+- Added configurable concurrent configuration backups with a safe range of 1 to 10 and a default of 3.
+- Applied the concurrency setting to scheduled, all-device, and topology-triggered backup jobs.
+- Updated background progress to report completed devices while multiple backups run in parallel.
+
 # FabricNavigator 26.09.10.265
 
 - Positioned topology backup progress above the sticky legend and zoom controls so it no longer covers them.

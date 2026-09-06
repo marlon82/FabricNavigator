@@ -20,6 +20,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     private static final Path SETTINGS=ROOT.resolve("settings.properties");
     private static final Path STATUS=ROOT.resolve("status.properties");
     private static final Object LOCK=new Object();
+    private static final ConcurrentMap<String,Object> DEVICE_LOCKS=new ConcurrentHashMap<String,Object>();
     private ScheduledExecutorService executor;
 
     public static final class Record {
@@ -35,11 +36,12 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     }
     public void contextDestroyed(ServletContextEvent event){if(executor!=null)executor.shutdownNow();}
 
-    public static Properties settings(){Properties p=readProperties(SETTINGS);if(!p.containsKey("enabled"))p.setProperty("enabled","false");if(!p.containsKey("intervalHours"))p.setProperty("intervalHours","24");if(!p.containsKey("retention"))p.setProperty("retention","30");return p;}
-    public static void saveSettings(boolean enabled,int intervalHours,int retention,String actor,String remote) throws Exception{
+    public static Properties settings(){Properties p=readProperties(SETTINGS);if(!p.containsKey("enabled"))p.setProperty("enabled","false");if(!p.containsKey("intervalHours"))p.setProperty("intervalHours","24");if(!p.containsKey("retention"))p.setProperty("retention","30");if(!p.containsKey("parallelism"))p.setProperty("parallelism","3");return p;}
+    public static int parallelism(){return Math.max(1,Math.min(10,parseInt(settings().getProperty("parallelism"),3)));}
+    public static void saveSettings(boolean enabled,int intervalHours,int retention,int parallelism,String actor,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
-        if(intervalHours<1||intervalHours>720||retention<2||retention>500)throw new IllegalArgumentException("Invalid backup settings");
-        Properties p=settings();p.setProperty("enabled",Boolean.toString(enabled));p.setProperty("intervalHours",Integer.toString(intervalHours));p.setProperty("retention",Integer.toString(retention));p.setProperty("updatedAt",Instant.now().toString());p.setProperty("updatedBy",clean(actor));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");AuditLog.log(actor,"CONFIG_BACKUP_SETTINGS","enabled="+enabled+" · interval="+intervalHours+"h · retention="+retention,remote);
+        if(intervalHours<1||intervalHours>720||retention<2||retention>500||parallelism<1||parallelism>10)throw new IllegalArgumentException("Invalid backup settings");
+        Properties p=settings();p.setProperty("enabled",Boolean.toString(enabled));p.setProperty("intervalHours",Integer.toString(intervalHours));p.setProperty("retention",Integer.toString(retention));p.setProperty("parallelism",Integer.toString(parallelism));p.setProperty("updatedAt",Instant.now().toString());p.setProperty("updatedBy",clean(actor));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");AuditLog.log(actor,"CONFIG_BACKUP_SETTINGS","enabled="+enabled+" · interval="+intervalHours+"h · retention="+retention+" · parallelism="+parallelism,remote);
     }
     public static Properties status(){return readProperties(STATUS);}
 
@@ -54,16 +56,17 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     public static int[] captureAll(String actor,String source,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
-        int ok=0,failed=0;writeStatus("running","Configuration backup is running",0,0);
-        for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){
-            try{String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId==null||sshId.length()==0)continue;capture(device,actor,source,remote);ok++;}catch(Exception ex){failed++;AuditLog.log(actor,"FAILED_CONFIG_BACKUP",device+" · "+safeMessage(ex),remote);}
-        }
+        int ok=0,failed=0;writeStatus("running","Configuration backup is running",0,0);List<String> devices=new ArrayList<String>();
+        for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId!=null&&sshId.length()>0)devices.add(device);}
+        ExecutorService workers=Executors.newFixedThreadPool(Math.min(parallelism(),Math.max(1,devices.size())));CompletionService<Boolean> completed=new ExecutorCompletionService<Boolean>(workers);
+        for(final String device:devices)completed.submit(new Callable<Boolean>(){public Boolean call(){try{capture(device,actor,source,remote);return Boolean.TRUE;}catch(Exception ex){try{AuditLog.log(actor,"FAILED_CONFIG_BACKUP",device+" · "+safeMessage(ex),remote);}catch(Exception ignored){}return Boolean.FALSE;}}});
+        try{for(int index=0;index<devices.size();index++){if(Boolean.TRUE.equals(completed.take().get()))ok++;else failed++;writeStatus("running","Configuration backup is running",ok,failed);}}finally{workers.shutdownNow();}
         writeStatus(failed>0?"warning":"success",ok+" device(s) backed up · "+failed+" failed",ok,failed);return new int[]{ok,failed};
     }
 
     public static Record capture(String device,String actor,String source,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
-        validateDevice(device);synchronized(LOCK){
+        validateDevice(device);synchronized(deviceLock(device)){
             Properties credential=CredentialVault.getSshForDevice(device);int port=parseInt(credential.getProperty("port"),22);
             String approved=KnownHostsManager.approvedFingerprint(device,port);if(approved==null||approved.length()==0)throw new SecurityException("SSH host key is not approved");
             KnownHostsManager.Pending pending=scanHostKey(device,port);if(!approved.equals(pending.fingerprint))throw new SecurityException("SSH host key changed");
@@ -73,17 +76,17 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
             byte[] archive=new byte[0];int archiveMarker=result.output.indexOf("FN_ARCHIVE_BEGIN\n");if(archiveMarker>=0&&archiveMarker<marker){String encoded=result.output.substring(archiveMarker+"FN_ARCHIVE_BEGIN\n".length(),marker).trim();try{archive=Base64.getDecoder().decode(encoded);}catch(Exception ex){throw new IOException("Invalid full backup archive");}if(archive.length<32)throw new IOException("Invalid full backup archive");}
             if("fabricengine".equals(platform)&&archive.length==0)throw new IOException("FabricEngine full backup archive is missing");
             String configuration=normalize(result.output.substring(marker+"FN_CONFIG_BEGIN\n".length()));if(configuration.length()==0)throw new IOException("The device returned an empty configuration");
-            String digest=sha256(configuration.getBytes(StandardCharsets.UTF_8)),archiveDigest=archive.length>0?sha256(archive):"";List<Record> existing=list(device);Record latest=existing.isEmpty()?null:existing.get(0);
+            String digest=sha256(configuration.getBytes(StandardCharsets.UTF_8)),archiveDigest=archive.length>0?sha256(archive):"";synchronized(LOCK){List<Record> existing=list(device);Record latest=existing.isEmpty()?null:existing.get(0);
             boolean unchanged=latest!=null&&digest.equals(latest.sha256)&&archiveDigest.equals(latest.archiveSha256);
             if(unchanged&&!"post-restore".equals(source)){AuditLog.log(actor,"CONFIG_BACKUP_UNCHANGED",device+" · version="+latest.id+" · platform="+platform,remote);return latest;}
             long now=System.currentTimeMillis();String id=now+"-"+UUID.randomUUID().toString().substring(0,8),changeActor="restore".equals(source)||"post-restore".equals(source)?clean(actor):existing.isEmpty()?"initial capture":"unknown on device";
             Path directory=deviceDirectory(device);secureDirectory(directory);Path cfg=directory.resolve(id+".cfg"),meta=directory.resolve(id+".properties"),archivePath=directory.resolve(id+".tgz");writeAtomic(cfg,configuration.getBytes(StandardCharsets.UTF_8));if(archive.length>0)writeAtomic(archivePath,archive);Properties values=new Properties();values.setProperty("id",id);values.setProperty("device",device);values.setProperty("platform",platform);values.setProperty("capturedAt",Instant.ofEpochMilli(now).toString());values.setProperty("capturedAtMillis",Long.toString(now));values.setProperty("capturedBy",clean(actor));values.setProperty("source",clean(source));values.setProperty("changeActor",changeActor);values.setProperty("sha256",digest);values.setProperty("archiveSha256",archiveDigest);values.setProperty("fullArchive",Boolean.toString(archive.length>0));writeProperties(meta,values,"FabricNavigator configuration version metadata");prune(device,parseInt(settings().getProperty("retention"),30));AuditLog.log(actor,"CONFIG_BACKUP_CREATED",device+" · version="+id+" · platform="+platform+" · fullArchive="+(archive.length>0)+" · sha256="+digest+(archiveDigest.length()>0?" · archiveSha256="+archiveDigest:""),remote);return record(meta);
-        }}
+        }}}
 
     public static void restore(String device,String version,String actor,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
-        validateDevice(device);if(version==null||!version.matches("[0-9]{10,}-[a-f0-9]{8}"))throw new IllegalArgumentException("Invalid configuration version");synchronized(LOCK){
-            Record target=find(device,version);capture(device,actor,"pre-restore",remote);Properties credential=CredentialVault.getSshForDevice(device);String configuration=new String(Files.readAllBytes(target.configuration),StandardCharsets.UTF_8);byte[] archive=target.archive!=null&&Files.isRegularFile(target.archive)?Files.readAllBytes(target.archive):new byte[0];if("fabricengine".equals(target.platform)&&archive.length==0)throw new IOException("This FabricEngine version has no full backup archive and cannot be restored safely");ProcessResult result=run(device,credential,"restore",target.platform,configuration,archive);if(result.code!=0){AuditLog.log(actor,"FAILED_CONFIG_RESTORE",device+" · target="+version+" · "+result.error(),remote);throw new IOException(result.error());}AuditLog.log(actor,"CONFIG_RESTORE",device+" · target="+version+" · platform="+target.platform+" · fullArchive="+(archive.length>0),remote);try{Thread.sleep(1500L);capture(device,actor,"post-restore",remote);}catch(Exception verification){AuditLog.log(actor,"CONFIG_RESTORE_VERIFY_WARNING",device+" · target="+version+" · "+safeMessage(verification),remote);}
+        validateDevice(device);if(version==null||!version.matches("[0-9]{10,}-[a-f0-9]{8}"))throw new IllegalArgumentException("Invalid configuration version");synchronized(deviceLock(device)){
+            Record target;synchronized(LOCK){target=find(device,version);}capture(device,actor,"pre-restore",remote);Properties credential=CredentialVault.getSshForDevice(device);String configuration=new String(Files.readAllBytes(target.configuration),StandardCharsets.UTF_8);byte[] archive=target.archive!=null&&Files.isRegularFile(target.archive)?Files.readAllBytes(target.archive):new byte[0];if("fabricengine".equals(target.platform)&&archive.length==0)throw new IOException("This FabricEngine version has no full backup archive and cannot be restored safely");ProcessResult result=run(device,credential,"restore",target.platform,configuration,archive);if(result.code!=0){AuditLog.log(actor,"FAILED_CONFIG_RESTORE",device+" · target="+version+" · "+result.error(),remote);throw new IOException(result.error());}AuditLog.log(actor,"CONFIG_RESTORE",device+" · target="+version+" · platform="+target.platform+" · fullArchive="+(archive.length>0),remote);try{Thread.sleep(1500L);capture(device,actor,"post-restore",remote);}catch(Exception verification){AuditLog.log(actor,"CONFIG_RESTORE_VERIFY_WARNING",device+" · target="+version+" · "+safeMessage(verification),remote);}
         }}
 
     public static List<Record> list(String device) throws Exception{
@@ -117,6 +120,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     private static Record record(Path metadata) throws Exception{Properties p=readProperties(metadata);Record r=new Record();r.id=p.getProperty("id","");r.device=p.getProperty("device","");r.platform=p.getProperty("platform","");r.capturedAt=p.getProperty("capturedAt","");r.capturedAtMillis=Long.parseLong(p.getProperty("capturedAtMillis","0"));r.capturedBy=p.getProperty("capturedBy","");r.source=p.getProperty("source","");r.changeActor=p.getProperty("changeActor","");r.sha256=p.getProperty("sha256","");r.archiveSha256=p.getProperty("archiveSha256","");r.configuration=metadata.resolveSibling(r.id+".cfg");r.archive=metadata.resolveSibling(r.id+".tgz");if(!Files.isRegularFile(r.configuration))throw new FileNotFoundException();return r;}
     private static Path deviceDirectory(String device){return ROOT.resolve(device.replace('.','_'));}
+    private static Object deviceLock(String device){Object created=new Object(),existing=DEVICE_LOCKS.putIfAbsent(device,created);return existing==null?created:existing;}
     private static void validateDevice(String device){if(device==null||!device.matches("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}"))throw new IllegalArgumentException("Invalid device IP");for(String part:device.split("\\."))if(Integer.parseInt(part)>255)throw new IllegalArgumentException("Invalid device IP");}
     private static void prune(String device,int retention) throws Exception{List<Record> records=list(device);for(int i=retention;i<records.size();i++){Files.deleteIfExists(records.get(i).configuration);Files.deleteIfExists(records.get(i).archive);Files.deleteIfExists(deviceDirectory(device).resolve(records.get(i).id+".properties"));}}
     private static byte[] tarEntry(Path archive,String entry) throws Exception{Process process=new ProcessBuilder("/bin/tar","-xOzf",archive.toString(),entry).start();Collector stdout=new Collector(process.getInputStream()),stderr=new Collector(process.getErrorStream());Thread a=new Thread(stdout),b=new Thread(stderr);a.start();b.start();if(!process.waitFor(20,TimeUnit.SECONDS)){process.destroyForcibly();throw new IOException("Archive extraction timed out");}a.join();b.join();byte[] value=stdout.bytes();if(process.exitValue()!=0)throw new IOException(stderr.value().trim().length()>0?stderr.value().trim():"Archive entry not found");if(value.length>16*1024*1024)throw new IOException("Archive configuration is too large to display");return value;}
