@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.252
+# FabricNavigator 26.09.10.253
+
+- Increased the font size in the full-archive ASCII configuration viewer for improved readability.
 
 - Prevented duplicate Configuration backups entries when the feature is unlocked and the administration shell reloads.
 - Simplified the Features description by removing the administrator-password restriction notice.

@@ -688,3 +688,6 @@ html[data-theme="dark"] body .muted{color:var(--fn-muted)!important}
 
 /* Keep the full-archive configuration viewer at the top of its viewport. */
 html body .fn-view-dialog{place-items:start center!important;padding-top:4px!important}
+
+/* Improve readability of stored switch configurations. */
+.fn-view-config{font-size:13px!important;line-height:1.5!important}
