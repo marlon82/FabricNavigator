@@ -600,9 +600,10 @@ body.fn-topology-page .fn-build-number{top:auto!important;right:14px!important;b
 @media(max-width:620px){.fn-demo-config-fields{grid-template-columns:1fr}.fn-demo-config-card{padding:18px}}
 
 /* Fabric Engine Virtual IST cluster members. */
-.fn-topology-page #topology-graph .node .fn-vist-cluster-outline{fill:color-mix(in srgb,var(--fn-accent) 7%,transparent);stroke:#8b35e8;stroke-width:3;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px color-mix(in srgb,#8b35e8 65%,transparent));pointer-events:none}
-.fn-topology-page #topology-graph.fn-hide-vist-clusters .fn-vist-cluster-outline{display:none}
-.fn-topology-page #topology-graph .node.fn-vist-member.fn-selected .fn-vist-cluster-outline{stroke:#25b8ff;filter:drop-shadow(0 0 6px color-mix(in srgb,#25b8ff 75%,transparent))}
+.fn-topology-page #topology-graph .fn-vist-cluster-layer{pointer-events:none}
+.fn-topology-page #topology-graph .fn-vist-cluster-frame rect{fill:color-mix(in srgb,var(--fn-accent) 7%,transparent);stroke:#8b35e8;stroke-width:3;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px color-mix(in srgb,#8b35e8 65%,transparent))}
+.fn-topology-page #topology-graph .fn-vist-cluster-label{fill:#8b35e8;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;paint-order:stroke;stroke:var(--fn-surface);stroke-width:3px;vector-effect:non-scaling-stroke}
+.fn-topology-page #topology-graph.fn-hide-vist-clusters .fn-vist-cluster-layer{display:none}
 .fn-node-hover-vist-row{margin-top:5px;padding-top:7px;border-top:1px solid color-mix(in srgb,var(--fn-accent) 28%,var(--fn-border))}
 .fn-node-hover-vist-row dt{color:var(--fn-accent)!important;font-weight:900!important}
 

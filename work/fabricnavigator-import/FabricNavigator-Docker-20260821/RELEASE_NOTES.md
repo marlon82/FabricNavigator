@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.274
+
+- Replaced the separate vIST member outlines with one shared frame enclosing both cluster partners.
+- Made the shared frame follow both members while they are moved and kept it controlled by the existing Link view option.
+
 # FabricNavigator 26.09.10.273
 
 - Changed detected vIST members to use a clear solid cluster frame.
