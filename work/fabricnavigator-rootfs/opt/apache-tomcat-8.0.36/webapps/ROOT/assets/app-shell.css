@@ -585,6 +585,16 @@ body.fn-topology-page .fn-build-number{top:auto!important;right:14px!important;b
 .fn-build-dialog-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:18px}.fn-build-dialog-actions button{min-height:40px;padding:8px 15px;border-radius:9px}.fn-build-dialog-install{border-color:var(--fn-accent)!important;background:var(--fn-accent)!important;color:#fff!important}.fn-build-dialog-close,.fn-build-dialog-open{border:1px solid var(--fn-border)!important;background:var(--fn-panel)!important;color:var(--fn-text)!important}
 .fn-build-dialog-install[hidden]{display:none!important}
 
+/* Configurable topology demo. */
+.fn-demo-config-dialog{position:fixed;inset:0;z-index:12100;display:grid;place-items:center;padding:22px;background:rgba(3,9,22,.66);backdrop-filter:blur(7px)}
+.fn-demo-config-dialog[hidden]{display:none!important}
+.fn-demo-config-card{box-sizing:border-box;width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:24px;border:1px solid color-mix(in srgb,var(--fn-accent) 52%,var(--fn-border));border-top:4px solid var(--fn-accent);border-radius:18px;background:var(--fn-panel);color:var(--fn-text);box-shadow:0 32px 90px rgba(3,9,22,.5)}
+.fn-demo-config-icon{display:grid;place-items:center;width:44px;height:44px;margin-bottom:12px;border-radius:12px;background:color-mix(in srgb,var(--fn-accent) 14%,var(--fn-panel));color:var(--fn-accent);font-size:26px;font-weight:900}
+.fn-demo-config-card h2{margin:0 0 7px;font-size:21px}.fn-demo-config-hint{margin:0 0 18px;color:var(--fn-muted);font-size:11px;line-height:1.5}
+.fn-demo-config-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.fn-demo-config-fields label{display:grid;gap:6px;padding:12px;border:1px solid var(--fn-border);border-radius:11px;background:color-mix(in srgb,var(--fn-accent) 5%,var(--fn-panel));color:var(--fn-text);font-weight:800}.fn-demo-config-fields input{box-sizing:border-box;width:100%;min-height:40px;padding:8px 10px;border:1px solid var(--fn-border);border-radius:9px;background:var(--fn-panel);color:var(--fn-text);font:800 12px system-ui}.fn-demo-config-fields input:focus{border-color:var(--fn-accent);outline:3px solid color-mix(in srgb,var(--fn-accent) 18%,transparent)}
+.fn-demo-config-card footer{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.fn-demo-config-card footer button{min-height:40px;padding:8px 15px;border-radius:9px}.fn-demo-config-cancel{border:1px solid var(--fn-border)!important;background:var(--fn-panel)!important;color:var(--fn-text)!important}.fn-demo-config-create{border-color:var(--fn-accent)!important;background:var(--fn-accent)!important;color:#fff!important}
+@media(max-width:620px){.fn-demo-config-fields{grid-template-columns:1fr}.fn-demo-config-card{padding:18px}}
+
 /* Embedded WebView credentials use the same visual surface as SNMP and SSH. */
 .fn-webview-admin-panel .fn-admin-system-frame{border-radius:18px!important;background:transparent!important}
 html.fn-admin-embedded body:has(#web-form){padding:0!important;background:transparent!important}
