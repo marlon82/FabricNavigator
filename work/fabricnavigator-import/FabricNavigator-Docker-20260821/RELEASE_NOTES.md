@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.273
+
+- Changed detected vIST members to use a clear solid cluster frame.
+- Added a persistent “vIST clusters” switch to Topology Tools → Link view; cluster frames remain enabled by default.
+
 # FabricNavigator 26.09.10.272
 
 - Added SNMP-based detection of active Fabric Engine Virtual IST clusters, including peer IP and vIST VLAN.
