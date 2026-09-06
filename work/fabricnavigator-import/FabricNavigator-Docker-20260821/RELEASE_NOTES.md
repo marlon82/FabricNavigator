@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.264
+
+- Changed topology configuration backups to non-blocking background operations.
+- Added a compact, expandable progress widget in the lower-left corner with per-device results and a manual close action.
+- Successful backup jobs turn green, collapse automatically, and disappear after 20 seconds.
+
 # FabricNavigator 26.09.10.263
 
 - Added configuration backup to the topology Actions panel and aligned its availability with the node context menu.
