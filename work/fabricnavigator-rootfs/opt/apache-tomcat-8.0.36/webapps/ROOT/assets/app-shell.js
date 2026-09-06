@@ -1,5 +1,5 @@
 (function(){'use strict';if(window.__fabricNavigatorShellV170)return;window.__fabricNavigatorShellV170=true;
-var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.256',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnAdminTab','fnAdminCredentialTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
+var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.257',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnAdminTab','fnAdminCredentialTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
 if(location.pathname.indexOf('/admin/')===0)document.documentElement.dataset.app='fabricnavigator-admin';
 if(location.pathname==='/devices/'||location.pathname==='/devices/index.jsp'){var obsoleteDeviceForm=document.getElementById('device-form'),obsoleteDeviceCard=obsoleteDeviceForm&&obsoleteDeviceForm.closest('aside.card');if(obsoleteDeviceCard)obsoleteDeviceCard.remove();}
 function saved(key){try{return localStorage.getItem(key);}catch(e){return null;}}
@@ -494,7 +494,7 @@ if(document.documentElement.classList.contains('fn-shell-loading')){var revealSt
 
 /* Automated switch configuration backups, version comparison, and restore. */
 (function(){
- if(location.pathname!=='/admin/'||document.querySelector('.fn-config-backup-admin-panel')||document.documentElement.dataset.fnConfigBackupInit)return;
+ if(true||location.pathname!=='/admin/'||document.querySelector('.fn-config-backup-admin-panel')||document.documentElement.dataset.fnConfigBackupInit)return;
  document.documentElement.dataset.fnConfigBackupInit='pending';
  fetch('/admin/feature-status.jsp?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}).then(function(response){if(!response.ok)throw new Error('feature-status');return response.json();}).then(function(features){if(!features.configurationBackup){document.documentElement.dataset.fnConfigBackupInit='disabled';return;}if(document.querySelector('.fn-config-backup-admin-panel')||document.getElementById('fn-admin-tab-config-backups'))return;document.documentElement.dataset.fnConfigBackupInit='ready';
  var nav=document.querySelector('.fn-admin-tabs'),grid=document.querySelector('main.page .grid');if(!nav||!grid)return;
@@ -506,4 +506,10 @@ if(document.documentElement.classList.contains('fn-shell-loading')){var revealSt
  tab.addEventListener('click',show);nav.addEventListener('click',function(event){var other=event.target.closest('[role="tab"]');if(other&&other!==tab)panel.hidden=true;},true);var frame=panel.querySelector('iframe');frame.addEventListener('load',function(){fit();try{frame.contentDocument.documentElement.lang=de?'de':'en';frame.contentDocument.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-theme')||'light');}catch(ignored){}});if(window.ResizeObserver)new ResizeObserver(fit).observe(panel);
  try{if(localStorage.getItem('fnAdminTab')==='config-backups')show();}catch(ignored){}
  }).catch(function(){});
+}());
+
+/* Feature-dependent Configuration Backups entry in the central navigation. */
+(function(){
+ function install(){var menu=document.querySelector('.fn-main-menu');if(!menu||menu.querySelector('[href="/config-backups/"]'))return;fetch('/admin/feature-status.jsp?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}).then(function(response){if(!response.ok)throw new Error();return response.json();}).then(function(features){if(!features.configurationBackup)return;var link=document.createElement('a'),label=document.createElement('span'),admin=menu.querySelector('[href="/admin/"]');link.href='/config-backups/';link.className='fn-main-nav-item';if(location.pathname.indexOf('/config-backups/')===0)link.classList.add('active');link.title=lang==='de'?'Konfigurations-Backups':'Configuration Backups';link.setAttribute('aria-label',link.title);link.innerHTML='<span class="fn-main-nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v5H4zM4 13.5h16v5H4z"/><path d="M8 8h8M8 16h8"/><circle cx="6" cy="8" r=".7"/><circle cx="6" cy="16" r=".7"/></svg></span>';label.className='fn-main-nav-label';label.textContent=lang==='de'?'Backups':'Backups';link.appendChild(label);menu.insertBefore(link,admin||null);}).catch(function(){});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(install,0);});else setTimeout(install,0);
 }());

@@ -1,3 +1,10 @@
+# FabricNavigator 26.09.10.257
+
+- Added preferred Fabric Engine OpenAPI and SwitchEngine JSON-RPC paths for service prechecks with automatic verified SSH fallback.
+- Added an administrator setting under System > Features to enable or disable OpenAPI preference.
+- Moved Configuration Backups from the Administration tabs into the central navigation between Devices and Administration when the feature is unlocked.
+- Fixed the release builder classpath for configuration-backup servlet classes.
+
 # FabricNavigator 26.09.10.256
 
 - Fixed the WebView credential Edit action and prevented duplicate profiles from repeated identical create requests.

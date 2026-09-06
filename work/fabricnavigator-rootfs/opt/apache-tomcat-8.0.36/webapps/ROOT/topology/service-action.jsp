@@ -3,13 +3,22 @@ private static String j(String s){if(s==null)return "";return s.replace("\\","\\
 private static String b64(String s){return Base64.getEncoder().encodeToString((s==null?"":s).getBytes(StandardCharsets.UTF_8));}
 private static boolean ip(String s){if(s==null||!s.matches("^[0-9.]{7,15}$"))return false;String[] p=s.split("\\.",-1);if(p.length!=4)return false;for(String x:p)try{int n=Integer.parseInt(x);if(n<0||n>255)return false;}catch(Exception e){return false;}return true;}
 private static int number(String value,int minimum,int maximum)throws Exception{int n=Integer.parseInt(value);if(n<minimum||n>maximum)throw new IllegalArgumentException("Value outside allowed range");return n;}
+private static boolean preferOpenApi(){Properties p=new Properties();File f=new File(System.getProperty("fabricnavigator.data.dir","/opt/fabricnavigator/data"),"openapi.properties");if(!f.isFile())return true;try{InputStream in=new FileInputStream(f);try{p.load(new InputStreamReader(in,StandardCharsets.UTF_8));}finally{in.close();}}catch(Exception ignored){}return !"false".equalsIgnoreCase(p.getProperty("preferred","true"));}
+private static String readLast(Process p)throws Exception{BufferedReader r=new BufferedReader(new InputStreamReader(p.getInputStream(),StandardCharsets.UTF_8));String line,last="";while((line=r.readLine())!=null)last=line;return last;}
+private static String runOpenApi(String host,String action,String vlan,String name,String msti,String isid,String platform,Properties c)throws Exception{
+ if(!preferOpenApi()||!"precheck".equals(action))return null;
+ Process p=new ProcessBuilder("/usr/bin/python3","/opt/fabricnavigator/service-openapi.py").redirectErrorStream(true).start();BufferedWriter w=new BufferedWriter(new OutputStreamWriter(p.getOutputStream(),StandardCharsets.UTF_8));
+ for(String v:new String[]{host,c.getProperty("username",""),c.getProperty("sshPassword",""),action,vlan,name,msti,isid,platform}){w.write(b64(v));w.newLine();}w.close();
+ boolean done=p.waitFor(30,TimeUnit.SECONDS);if(!done){p.destroyForcibly();return null;}String result=readLast(p);return p.exitValue()==0&&result.length()>0?result:null;
+}
 private static String run(String host,String action,String vlan,String name,String msti,String isid,String platform)throws Exception{
  String id=CredentialVault.getDeviceCredentialId(host,CredentialVault.TYPE_SSH);if(id==null||id.length()==0)throw new IOException("No SSH credential is assigned");
  Properties c=CredentialVault.getCredential(id);if(!"true".equalsIgnoreCase(c.getProperty("enabled","true")))throw new IOException("Assigned SSH credential is disabled");
+ String apiResult=runOpenApi(host,action,vlan,name,msti,isid,platform,c);if(apiResult!=null)return apiResult;
  int port=Integer.parseInt(c.getProperty("port","22"));if(!KnownHostsManager.isApproved(host,port))throw new IOException("SSH host key is not approved");
  Process p=new ProcessBuilder("/usr/bin/perl","/opt/fabricnavigator/service-provision.pl").redirectErrorStream(true).start();BufferedWriter w=new BufferedWriter(new OutputStreamWriter(p.getOutputStream(),StandardCharsets.UTF_8));
  String[] values={host,c.getProperty("username",""),c.getProperty("sshPassword",""),c.getProperty("sshPrivateKey",""),c.getProperty("sshKeyPassphrase","")};for(String v:values){w.write(b64(v));w.newLine();}w.write(Integer.toString(port));w.newLine();for(String v:new String[]{action,vlan,name,msti,isid,platform}){w.write(b64(v));w.newLine();}w.close();
- boolean done=p.waitFor(90,TimeUnit.SECONDS);if(!done){p.destroyForcibly();throw new IOException("SSH operation timed out");}BufferedReader r=new BufferedReader(new InputStreamReader(p.getInputStream(),StandardCharsets.UTF_8));String line,last="";while((line=r.readLine())!=null)last=line;if(last.length()==0)throw new IOException("SSH helper returned no result");return last;
+ boolean done=p.waitFor(90,TimeUnit.SECONDS);if(!done){p.destroyForcibly();throw new IOException("SSH operation timed out");}String last=readLast(p);if(last.length()==0)throw new IOException("SSH helper returned no result");return last;
 }
 %><%
 response.setHeader("Cache-Control","no-store");if(!EdmSecurity.isAdmin(request)){response.sendError(403);return;}if(!"POST".equalsIgnoreCase(request.getMethod())||!EdmSecurity.validCsrf(request)){response.sendError(403);return;}
