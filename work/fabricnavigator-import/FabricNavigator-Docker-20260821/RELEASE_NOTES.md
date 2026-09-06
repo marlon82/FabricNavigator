@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.259
+
+- Moved API administration into Administration → System → API.
+- Reworked feature management into a list of enabled features with a Delete action and a permanent unlock field.
+- Made the feature-dependent Configuration Backups entry load reliably in the central navigation.
+
 # FabricNavigator 26.09.10.258
 
 - Configuration Backup can now be locked again from Administration → System → Features without deleting stored backups.
