@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Properties;
 
 public final class FeatureFlags {
@@ -31,6 +33,16 @@ public final class FeatureFlags {
             try{Files.move(temporary,FILE,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}catch(AtomicMoveNotSupportedException ex){Files.move(temporary,FILE,StandardCopyOption.REPLACE_EXISTING);}
             try{Files.setPosixFilePermissions(FILE,PosixFilePermissions.fromString("rw-------"));}catch(UnsupportedOperationException ignored){}
         }finally{Files.deleteIfExists(temporary);}
+    }
+
+    public static boolean unlockConfigurationBackup(String password) throws Exception {
+        String expected=System.getenv("FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD");
+        if(expected==null||expected.length()==0)expected="CONFIGBACKUP";
+        byte[] supplied=(password==null?"":password).getBytes(StandardCharsets.UTF_8);
+        byte[] required=expected.getBytes(StandardCharsets.UTF_8);
+        if(!MessageDigest.isEqual(supplied,required))return false;
+        enableConfigurationBackup();
+        return true;
     }
 
     public static void requireConfigurationBackup(){
