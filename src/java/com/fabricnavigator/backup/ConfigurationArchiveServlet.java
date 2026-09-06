@@ -1,6 +1,7 @@
 package com.fabricnavigator.backup;
 
 import com.fabricnavigator.security.EdmSecurity;
+import com.fabricnavigator.features.FeatureFlags;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -13,6 +14,7 @@ public final class ConfigurationArchiveServlet extends HttpServlet {
     private static final long serialVersionUID=1L;
     protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException,IOException {
         if(!EdmSecurity.isAdmin(request)){response.sendError(HttpServletResponse.SC_FORBIDDEN);return;}
+        if(!FeatureFlags.configurationBackupEnabled()){response.sendError(HttpServletResponse.SC_NOT_FOUND);return;}
         String device=request.getParameter("device"),id=request.getParameter("version");
         try{
             ConfigurationBackupScheduler.Record record=ConfigurationBackupScheduler.find(device,id);

@@ -3,6 +3,7 @@ package com.fabricnavigator.backup;
 import com.fabricnavigator.security.AuditLog;
 import com.fabricnavigator.security.CredentialVault;
 import com.fabricnavigator.security.KnownHostsManager;
+import com.fabricnavigator.features.FeatureFlags;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -36,6 +37,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     public static Properties settings(){Properties p=readProperties(SETTINGS);if(!p.containsKey("enabled"))p.setProperty("enabled","false");if(!p.containsKey("intervalHours"))p.setProperty("intervalHours","24");if(!p.containsKey("retention"))p.setProperty("retention","30");return p;}
     public static void saveSettings(boolean enabled,int intervalHours,int retention,String actor,String remote) throws Exception{
+        FeatureFlags.requireConfigurationBackup();
         if(intervalHours<1||intervalHours>720||retention<2||retention>500)throw new IllegalArgumentException("Invalid backup settings");
         Properties p=settings();p.setProperty("enabled",Boolean.toString(enabled));p.setProperty("intervalHours",Integer.toString(intervalHours));p.setProperty("retention",Integer.toString(retention));p.setProperty("updatedAt",Instant.now().toString());p.setProperty("updatedBy",clean(actor));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");AuditLog.log(actor,"CONFIG_BACKUP_SETTINGS","enabled="+enabled+" · interval="+intervalHours+"h · retention="+retention,remote);
     }
@@ -43,6 +45,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     private static void scheduledRun(){
         try{
+            if(!FeatureFlags.configurationBackupEnabled())return;
             Properties p=settings();if(!Boolean.parseBoolean(p.getProperty("enabled")))return;
             long interval=Long.parseLong(p.getProperty("intervalHours","24"))*3600000L,last=Long.parseLong(p.getProperty("lastAutomaticAt","0"));if(System.currentTimeMillis()-last<interval)return;
             p.setProperty("lastAutomaticAt",Long.toString(System.currentTimeMillis()));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");captureAll("system","scheduled","127.0.0.1");
@@ -50,6 +53,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     }
 
     public static int[] captureAll(String actor,String source,String remote) throws Exception{
+        FeatureFlags.requireConfigurationBackup();
         int ok=0,failed=0;writeStatus("running","Configuration backup is running",0,0);
         for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){
             try{String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId==null||sshId.length()==0)continue;capture(device,actor,source,remote);ok++;}catch(Exception ex){failed++;AuditLog.log(actor,"FAILED_CONFIG_BACKUP",device+" · "+safeMessage(ex),remote);}
@@ -58,6 +62,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     }
 
     public static Record capture(String device,String actor,String source,String remote) throws Exception{
+        FeatureFlags.requireConfigurationBackup();
         validateDevice(device);synchronized(LOCK){
             Properties credential=CredentialVault.getSshForDevice(device);int port=parseInt(credential.getProperty("port"),22);
             String approved=KnownHostsManager.approvedFingerprint(device,port);if(approved==null||approved.length()==0)throw new SecurityException("SSH host key is not approved");
@@ -76,11 +81,13 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
         }}
 
     public static void restore(String device,String version,String actor,String remote) throws Exception{
+        FeatureFlags.requireConfigurationBackup();
         validateDevice(device);if(version==null||!version.matches("[0-9]{10,}-[a-f0-9]{8}"))throw new IllegalArgumentException("Invalid configuration version");synchronized(LOCK){
             Record target=find(device,version);capture(device,actor,"pre-restore",remote);Properties credential=CredentialVault.getSshForDevice(device);String configuration=new String(Files.readAllBytes(target.configuration),StandardCharsets.UTF_8);byte[] archive=target.archive!=null&&Files.isRegularFile(target.archive)?Files.readAllBytes(target.archive):new byte[0];if("fabricengine".equals(target.platform)&&archive.length==0)throw new IOException("This FabricEngine version has no full backup archive and cannot be restored safely");ProcessResult result=run(device,credential,"restore",target.platform,configuration,archive);if(result.code!=0){AuditLog.log(actor,"FAILED_CONFIG_RESTORE",device+" · target="+version+" · "+result.error(),remote);throw new IOException(result.error());}AuditLog.log(actor,"CONFIG_RESTORE",device+" · target="+version+" · platform="+target.platform+" · fullArchive="+(archive.length>0),remote);try{Thread.sleep(1500L);capture(device,actor,"post-restore",remote);}catch(Exception verification){AuditLog.log(actor,"CONFIG_RESTORE_VERIFY_WARNING",device+" · target="+version+" · "+safeMessage(verification),remote);}
         }}
 
     public static List<Record> list(String device) throws Exception{
+        FeatureFlags.requireConfigurationBackup();
         validateDevice(device);List<Record> records=new ArrayList<Record>();Path directory=deviceDirectory(device);if(!Files.isDirectory(directory))return records;try(DirectoryStream<Path> stream=Files.newDirectoryStream(directory,"*.properties")){for(Path path:stream)try{records.add(record(path));}catch(Exception ignored){}}Collections.sort(records,new Comparator<Record>(){public int compare(Record a,Record b){return Long.compare(b.capturedAtMillis,a.capturedAtMillis);}});return records;
     }
     public static Record find(String device,String id) throws Exception{for(Record r:list(device))if(r.id.equals(id))return r;throw new FileNotFoundException("Configuration version not found");}

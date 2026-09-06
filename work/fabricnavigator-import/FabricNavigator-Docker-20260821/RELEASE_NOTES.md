@@ -1,4 +1,8 @@
-# FabricNavigator 26.09.10.249
+# FabricNavigator 26.09.10.250
+
+- Added an Administration → System → Features section that protects configuration backup activation with administrator password re-authentication.
+- Configuration backups, archive downloads, restores, and scheduled jobs now remain hidden and server-side locked until the feature is enabled.
+- Moved the full-archive ASCII configuration viewer to the top of the available browser viewport.
 
 - Added protected local switch configuration backups for FabricEngine, VSP, SwitchEngine, and EXOS devices using assigned SSH credentials and approved host keys.
 - FabricEngine, VSP, and VOSS backups now use `backup configure` and retrieve the complete device archive over SCP while retaining a normalized text copy for diffs.
