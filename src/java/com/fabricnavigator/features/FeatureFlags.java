@@ -23,9 +23,17 @@ public final class FeatureFlags {
     }
 
     public static synchronized void enableConfigurationBackup() throws Exception {
+        setConfigurationBackupEnabled(true);
+    }
+
+    public static synchronized void disableConfigurationBackup() throws Exception {
+        setConfigurationBackupEnabled(false);
+    }
+
+    private static void setConfigurationBackupEnabled(boolean enabled) throws Exception {
         Properties values=new Properties();
         if(Files.isRegularFile(FILE))try(InputStream input=Files.newInputStream(FILE)){values.load(input);}
-        values.setProperty("configurationBackup","true");
+        values.setProperty("configurationBackup",Boolean.toString(enabled));
         Files.createDirectories(FILE.getParent());
         Path temporary=Files.createTempFile(FILE.getParent(),"features.",".tmp");
         try{

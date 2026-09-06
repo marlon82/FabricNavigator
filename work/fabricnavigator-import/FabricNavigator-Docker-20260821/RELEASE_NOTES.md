@@ -1,3 +1,7 @@
+# FabricNavigator 26.09.10.258
+
+- Configuration Backup can now be locked again from Administration → System → Features without deleting stored backups.
+
 # FabricNavigator 26.09.10.257
 
 - Added preferred Fabric Engine OpenAPI and SwitchEngine JSON-RPC paths for service prechecks with automatic verified SSH fallback.
