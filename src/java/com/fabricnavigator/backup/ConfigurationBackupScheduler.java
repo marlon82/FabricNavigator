@@ -104,6 +104,17 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
         validateDevice(device);if(id==null||!id.matches("[0-9]{10,}-[a-f0-9]{8}"))throw new IllegalArgumentException("Invalid configuration version");synchronized(LOCK){Record record=find(device,id);boolean fullArchive=record.archive!=null&&Files.isRegularFile(record.archive);Files.deleteIfExists(record.configuration);Files.deleteIfExists(record.archive);Files.deleteIfExists(deviceDirectory(device).resolve(id+".properties"));AuditLog.log(actor,"CONFIG_BACKUP_DELETED",device+" · version="+id+" · platform="+record.platform+" · fullArchive="+fullArchive,remote);}
     }
 
+    public static List<String> backupDevices() throws Exception{
+        FeatureFlags.requireConfigurationBackup();List<String> devices=new ArrayList<String>();if(!Files.isDirectory(ROOT))return devices;
+        try(DirectoryStream<Path> stream=Files.newDirectoryStream(ROOT)){for(Path path:stream){if(!Files.isDirectory(path))continue;String device=path.getFileName().toString().replace('_','.');try{validateDevice(device);if(!list(device).isEmpty())devices.add(device);}catch(Exception ignored){}}}
+        Collections.sort(devices);return devices;
+    }
+
+    public static int deleteAll(String actor,String remote) throws Exception{
+        FeatureFlags.requireConfigurationBackup();synchronized(LOCK){int count=0,deviceCount=0;for(String device:backupDevices()){List<Record> records=list(device);if(records.isEmpty())continue;deviceCount++;for(Record record:records){Files.deleteIfExists(record.configuration);Files.deleteIfExists(record.archive);Files.deleteIfExists(deviceDirectory(device).resolve(record.id+".properties"));count++;}try{Files.deleteIfExists(deviceDirectory(device));}catch(DirectoryNotEmptyException ignored){}}
+            AuditLog.log(actor,"CONFIG_BACKUPS_ALL_DELETED","versions="+count+" · devices="+deviceCount,remote);return count;}
+    }
+
     private static Record record(Path metadata) throws Exception{Properties p=readProperties(metadata);Record r=new Record();r.id=p.getProperty("id","");r.device=p.getProperty("device","");r.platform=p.getProperty("platform","");r.capturedAt=p.getProperty("capturedAt","");r.capturedAtMillis=Long.parseLong(p.getProperty("capturedAtMillis","0"));r.capturedBy=p.getProperty("capturedBy","");r.source=p.getProperty("source","");r.changeActor=p.getProperty("changeActor","");r.sha256=p.getProperty("sha256","");r.archiveSha256=p.getProperty("archiveSha256","");r.configuration=metadata.resolveSibling(r.id+".cfg");r.archive=metadata.resolveSibling(r.id+".tgz");if(!Files.isRegularFile(r.configuration))throw new FileNotFoundException();return r;}
     private static Path deviceDirectory(String device){return ROOT.resolve(device.replace('.','_'));}
     private static void validateDevice(String device){if(device==null||!device.matches("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}"))throw new IllegalArgumentException("Invalid device IP");for(String part:device.split("\\."))if(Integer.parseInt(part)>255)throw new IllegalArgumentException("Invalid device IP");}

@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.262
+
+- Added a protected Delete all backups action with a FabricNavigator confirmation dialog and audit entry.
+- Reorganized stored configuration versions by device, with newest backups shown first.
+- Added an optional topology level when multiple saved topologies are available, while keeping devices with no clear mapping under Unassigned.
+
 # FabricNavigator 26.09.10.261
 
 - Matched the Updates submenu styling to the Credentials submenu in light and dark mode.
