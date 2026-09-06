@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.270
+
+- Configuration backup progress now survives navigation away from and back to the topology page.
+- Pending device backups resume safely after returning, while per-device locking prevents concurrent duplicate captures.
+- Completed backup notifications retain their green/error state and remaining auto-hide time across page navigation.
+
 # FabricNavigator 26.09.10.269
 
 - Stored configuration backup groups now show the discovered device name together with the IP address.
