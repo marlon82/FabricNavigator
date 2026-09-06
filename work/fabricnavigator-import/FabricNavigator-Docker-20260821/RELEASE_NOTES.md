@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.281
+
+- Renamed the per-user SSH tab label setting to the central default device label setting.
+- Applied the selected device name or IP address consistently to topology nodes, device information, device-related dialogs and menus, SSH tabs, and tunneled WebView tabs.
+- Kept device search available by both name and IP address regardless of the selected display label.
+
 # FabricNavigator 26.09.10.280
 
 - Changed configuration comparison to select the device first and then offer only the two stored configurations belonging to that device.
