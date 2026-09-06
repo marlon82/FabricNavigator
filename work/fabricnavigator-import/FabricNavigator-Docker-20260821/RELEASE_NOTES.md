@@ -1,7 +1,9 @@
-# FabricNavigator 26.09.10.247
+# FabricNavigator 26.09.10.248
 
 - Added protected local switch configuration backups for FabricEngine, VSP, SwitchEngine, and EXOS devices using assigned SSH credentials and approved host keys.
 - FabricEngine, VSP, and VOSS backups now use `backup configure` and retrieve the complete device archive over SCP while retaining a normalized text copy for diffs.
+- Added a View action that reads `ASCII_CONFIG` from `info.txt` and displays the referenced configuration from FabricEngine, VSP, and VOSS backup archives.
+- Added a protected Delete action for stored configuration versions, including their text configuration, full archive, metadata, and audit record.
 - Added command-based platform probing and resilient SSH host-key verification so devices without an explicit operating-system marker can still be backed up reliably.
 - Added optional scheduled backups with configurable intervals and per-device retention.
 - Added arbitrary version comparison with color-coded added and removed configuration lines.
