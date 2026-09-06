@@ -7,7 +7,8 @@
     var message=document.querySelector('[data-message-key]');
     if(message&&message.dataset.messageKey==='featureEnabled')message.textContent=language==='de'?'Das Konfigurations-Backup wurde freigeschaltet.':'Configuration backup was enabled.';
     if(message&&message.dataset.messageKey==='featureDisabled')message.textContent=language==='de'?'Das Konfigurations-Backup wurde entfernt. Gespeicherte Sicherungen bleiben erhalten.':'Configuration backup was removed. Stored backups are retained.';
-    var featureCard=panel.querySelector('article.card'),csrfInput=document.querySelector('input[name="csrfToken"]');
+    var featureCards=panel.querySelectorAll('article.card'),featureCard=featureCards.length?featureCards[0]:null,csrfInput=document.querySelector('input[name="csrfToken"]');
+    if(featureCards.length>1)featureCards[1].remove();
     if(featureCard){
       Array.prototype.slice.call(featureCard.children,2).forEach(function(child){child.remove();});
       var style=document.createElement('style');

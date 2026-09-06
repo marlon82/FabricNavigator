@@ -1,3 +1,11 @@
+# FabricNavigator 26.09.10.260
+
+- Removed the redundant Credentials section heading.
+- Moved Device API preferences from System → Features to Credentials → Device API.
+- Aligned ACLI and Discovery administration cards with the current administration design.
+- Ensured enabled Configuration Backups remains visible in the central navigation.
+- Added a localized Configuration Backups tooltip describing backup, comparison, and restore actions.
+
 # FabricNavigator 26.09.10.259
 
 - Moved API administration into Administration → System → API.

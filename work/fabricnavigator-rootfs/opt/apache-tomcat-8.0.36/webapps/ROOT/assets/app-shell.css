@@ -412,6 +412,8 @@ body > section.hero > .hero-inner{width:100%!important;margin:0!important;paddin
 @media(max-width:980px){.fn-topology-page .fn-topology-bottom-controls>.link-legends{order:3}.fn-topology-page .fn-topology-bottom-controls{bottom:4px}}
 /* Main navigation: keep the symbols and add a concise visible label. */
 .fn-main-menu a.fn-main-nav-item{display:inline-flex!important;place-items:unset!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;width:auto!important;min-width:42px!important;padding:3px 10px 3px 3px!important;gap:7px!important}
+.fn-main-menu a.fn-main-nav-item[hidden]{display:none!important}
+.fn-admin-credentials-panel>.fn-admin-group-heading{display:none!important}
 .fn-main-nav-label{color:var(--fn-text);font-size:12px;font-weight:850;line-height:1;white-space:nowrap}
 .fn-main-menu a.fn-main-nav-item.active .fn-main-nav-label,.fn-main-menu a.fn-main-nav-item:hover .fn-main-nav-label,.fn-main-menu a.fn-main-nav-item:focus-visible .fn-main-nav-label{color:var(--fn-accent)}
 @media(max-width:860px){.fn-main-menu a.fn-main-nav-item{padding-right:7px!important;gap:8px!important}.fn-main-nav-label{font-size:10px}}
