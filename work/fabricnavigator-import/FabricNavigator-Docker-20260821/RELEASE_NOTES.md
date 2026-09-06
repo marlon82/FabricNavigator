@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.268
+
+- Changed Configuration Backups to the same full-width workspace layout used by the primary FabricNavigator pages.
+- Removed the narrow outer content constraint and reduced unused page margins while retaining the individual function cards.
+
 # FabricNavigator 26.09.10.267
 
 - Added a bilingual control to the FabricEngine full-archive configuration viewer for hiding all `#` comment lines.
