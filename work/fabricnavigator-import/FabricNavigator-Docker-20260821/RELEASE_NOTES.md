@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.255
+# FabricNavigator 26.09.10.256
+
+- Fixed the WebView credential Edit action and prevented duplicate profiles from repeated identical create requests.
 
 - Added a feature-gated Back up configuration action under More Actions in the topology context menu for supported FabricEngine, VSP, VOSS, SwitchEngine, and EXOS devices.
 
