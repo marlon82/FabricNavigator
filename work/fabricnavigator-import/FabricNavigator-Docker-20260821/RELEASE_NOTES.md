@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.261
+
+- Matched the Updates submenu styling to the Credentials submenu in light and dark mode.
+- Aligned ACLI and Discovery cards with the standard administration card border, radius, spacing, and shadow.
+
 # FabricNavigator 26.09.10.260
 
 - Removed the redundant Credentials section heading.
