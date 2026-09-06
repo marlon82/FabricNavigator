@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.280
+
+- Changed configuration comparison to select the device first and then offer only the two stored configurations belonging to that device.
+- Disabled comparison until a device has at least two stored configuration versions.
+
 # FabricNavigator 26.09.10.279
 
 - Reduced Administration startup work by loading embedded System, Updates, Discovery, ACLI, WebView, and Device API pages only when their tab is opened.
