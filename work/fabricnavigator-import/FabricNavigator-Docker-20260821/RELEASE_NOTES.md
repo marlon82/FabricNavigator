@@ -1,5 +1,6 @@
-# FabricNavigator 26.09.10.245
+# FabricNavigator 26.09.10.246
 
+- Added design-consistent hover help to every topology Actions button, explaining its behavior and selection scope in German and English.
 - Replaced the demo topology quantity fields with live range sliders, constrained core and distribution device counts to increments of two, and added an option to generate the demo with or without topology groups.
 - Limited the topology Actions toolbox to actions supported by every selected node, and restricted tunneled WebView actions to explicitly supported FabricEngine/VSP devices.
 - Fixed software updates started from the build-number release-notes dialog so the full-screen installation progress view opens immediately.
