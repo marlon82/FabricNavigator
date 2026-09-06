@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.265
+
+- Positioned topology backup progress above the sticky legend and zoom controls so it no longer covers them.
+- Fixed configuration backup initialization in the node context menu, including multi-node selections.
+
 # FabricNavigator 26.09.10.264
 
 - Changed topology configuration backups to non-blocking background operations.
