@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.278
+
+- Made an automatically displaced Actions toolbox follow Topology Tools upward again when expanded tool sections are collapsed.
+- Preserved independent positioning after the user deliberately drags the Actions toolbox.
+
 # FabricNavigator 26.09.10.277
 
 - Prevented the movable Actions toolbox from overlapping Topology Tools when tool sections are expanded, collapsed, or moved.
