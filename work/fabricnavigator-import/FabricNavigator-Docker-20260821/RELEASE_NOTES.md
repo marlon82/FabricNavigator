@@ -1,3 +1,7 @@
+# FabricNavigator 26.09.10.275
+
+- Fixed Group selection in the node context menu after the original grouping control has been moved into the Actions toolbox.
+
 # FabricNavigator 26.09.10.274
 
 - Replaced the separate vIST member outlines with one shared frame enclosing both cluster partners.
