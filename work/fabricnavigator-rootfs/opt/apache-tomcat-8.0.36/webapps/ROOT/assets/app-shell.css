@@ -599,6 +599,12 @@ body.fn-topology-page .fn-build-number{top:auto!important;right:14px!important;b
 .fn-demo-config-card footer{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.fn-demo-config-card footer button{min-height:40px;padding:8px 15px;border-radius:9px}.fn-demo-config-cancel{border:1px solid var(--fn-border)!important;background:var(--fn-panel)!important;color:var(--fn-text)!important}.fn-demo-config-create{border-color:var(--fn-accent)!important;background:var(--fn-accent)!important;color:#fff!important}
 @media(max-width:620px){.fn-demo-config-fields{grid-template-columns:1fr}.fn-demo-config-card{padding:18px}}
 
+/* Fabric Engine Virtual IST cluster members. */
+.fn-topology-page #topology-graph .node .fn-vist-cluster-outline{fill:color-mix(in srgb,var(--fn-accent) 7%,transparent);stroke:#8b35e8;stroke-width:2.5;stroke-dasharray:8 4;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px color-mix(in srgb,#8b35e8 65%,transparent));pointer-events:none}
+.fn-topology-page #topology-graph .node.fn-vist-member.fn-selected .fn-vist-cluster-outline{stroke:#25b8ff;filter:drop-shadow(0 0 6px color-mix(in srgb,#25b8ff 75%,transparent))}
+.fn-node-hover-vist-row{margin-top:5px;padding-top:7px;border-top:1px solid color-mix(in srgb,var(--fn-accent) 28%,var(--fn-border))}
+.fn-node-hover-vist-row dt{color:var(--fn-accent)!important;font-weight:900!important}
+
 /* Embedded WebView credentials use the same visual surface as SNMP and SSH. */
 .fn-webview-admin-panel .fn-admin-system-frame{border-radius:18px!important;background:transparent!important}
 html.fn-admin-embedded body:has(#web-form){padding:0!important;background:transparent!important}

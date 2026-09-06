@@ -1,3 +1,10 @@
+# FabricNavigator 26.09.10.272
+
+- Added SNMP-based detection of active Fabric Engine Virtual IST clusters, including peer IP and vIST VLAN.
+- Added a clearly visible shared-style outline around FabricNodes that form a vIST pair.
+- Added vIST partner and VLAN details to the node hover card.
+- Added simulated vIST pairs to the configurable demo topology for testing without a live cluster.
+
 # FabricNavigator 26.09.10.271
 
 - Added an explicit maximum-backups-per-device setting with a default of 10 for new configurations.

@@ -38,6 +38,9 @@ public final class TopologyDiscoveryV7 {
     private static final int[] RC_ISIS_ADJ_IF_INDEX_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 63, 10, 1, 4};
     private static final int[] IF_NAME_OID = new int[]{1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1};
     private static final int[] IF_DESCR_OID = new int[]{1, 3, 6, 1, 2, 1, 2, 2, 1, 2};
+    private static final int[] VIRTUAL_IST_STATUS_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 1, 0};
+    private static final int[] VIRTUAL_IST_PEER_IP_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 2, 0};
+    private static final int[] VIRTUAL_IST_VLAN_ID_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 3, 0};
     private static final String DISCOVERY_SETTINGS = "/opt/tomcat/conf/edm-security/discovery.properties";
 
     private static int configuredInt(String string, int n, int n2, int n3) {
@@ -96,6 +99,9 @@ public final class TopologyDiscoveryV7 {
                     node.name = TopologyDiscoveryV7.clean(sessionMatch.name).length() == 0 ? queueItem.ip : TopologyDiscoveryV7.clean(sessionMatch.name);
                     node.sysDescr = TopologyDiscoveryV7.clean(sessionMatch.sysDescr);
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
+                    if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr)) {
+                        TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
+                    }
                     Map<String, String> map = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemSysName");
                     Map<String, String> map2 = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemPortId");
                     Map<String, String> map3 = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemPortDesc");
@@ -266,6 +272,28 @@ public final class TopologyDiscoveryV7 {
             linkedHashMap.put(TopologyDiscoveryV7.join(walkEntry.suffix), TopologyDiscoveryV7.clean(walkEntry.value));
         }
         return linkedHashMap;
+    }
+
+    private static void readVirtualIst(SnmpUtilV3 snmpUtilV3, Node node) {
+        try {
+            List<SnmpOID> oids = new ArrayList<SnmpOID>();
+            oids.add(new SnmpOID(VIRTUAL_IST_STATUS_OID));
+            oids.add(new SnmpOID(VIRTUAL_IST_PEER_IP_OID));
+            oids.add(new SnmpOID(VIRTUAL_IST_VLAN_ID_OID));
+            List<SnmpVarBind> values = snmpUtilV3.snmpGet(oids);
+            if (values == null || values.size() < 3) return;
+            int status = integerValue(values.get(0).getVar().toString());
+            String peer = clean(values.get(1).getVar().toString());
+            int vlan = integerValue(values.get(2).getVar().toString());
+            if (status == 1 && isAllowedAddress(peer) && !peer.equals(node.ip)) {
+                node.vistActive = true;
+                node.vistPeer = peer;
+                node.vistVlan = Math.max(0, vlan);
+            }
+        }
+        catch (Exception ignored) {
+            // Virtual IST is optional and is not available on every Fabric Engine release.
+        }
     }
 
     private static Map<Integer, String> localPortMap(SnmpUtilV3 snmpUtilV3) throws Exception {
@@ -586,6 +614,9 @@ public final class TopologyDiscoveryV7 {
         public String sysDescr = "";
         public String status = "unreachable";
         public String credential = "";
+        public boolean vistActive;
+        public String vistPeer = "";
+        public int vistVlan;
         public int depth;
     }
 
@@ -626,4 +657,3 @@ public final class TopologyDiscoveryV7 {
         }
     }
 }
-
