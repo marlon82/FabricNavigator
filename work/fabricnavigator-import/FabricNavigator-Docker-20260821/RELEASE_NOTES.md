@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.267
+
+- Added a bilingual control to the FabricEngine full-archive configuration viewer for hiding all `#` comment lines.
+- Comment filtering is display-only and never changes the stored backup or downloaded configuration.
+
 # FabricNavigator 26.09.10.266
 
 - Added configurable concurrent configuration backups with a safe range of 1 to 10 and a default of 3.
