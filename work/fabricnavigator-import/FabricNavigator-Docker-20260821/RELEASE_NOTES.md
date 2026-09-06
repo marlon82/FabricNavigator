@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.271
+
+- Added an explicit maximum-backups-per-device setting with a default of 10 for new configurations.
+- Allowed retention values from 1 to 500; older versions are pruned automatically after a successful capture.
+- Existing administrator-defined retention values are preserved during upgrades.
+
 # FabricNavigator 26.09.10.270
 
 - Configuration backup progress now survives navigation away from and back to the topology page.
