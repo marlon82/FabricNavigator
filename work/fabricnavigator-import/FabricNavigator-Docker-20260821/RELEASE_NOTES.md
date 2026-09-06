@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.279
+
+- Reduced Administration startup work by loading embedded System, Updates, Discovery, ACLI, WebView, and Device API pages only when their tab is opened.
+- Preserved the previously selected Admin tab and automatic iframe sizing with lazy-loaded content.
+
 # FabricNavigator 26.09.10.278
 
 - Made an automatically displaced Actions toolbox follow Topology Tools upward again when expanded tool sections are collapsed.
