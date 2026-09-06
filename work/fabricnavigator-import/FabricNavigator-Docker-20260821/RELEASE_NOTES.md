@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.269
+
+- Stored configuration backup groups now show the discovered device name together with the IP address.
+- Device names are loaded in the background with bounded concurrency, so opening the backup page remains responsive.
+
 # FabricNavigator 26.09.10.268
 
 - Changed Configuration Backups to the same full-width workspace layout used by the primary FabricNavigator pages.
