@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.253
+# FabricNavigator 26.09.10.254
+
+- Prevented the configuration viewer from reopening after a stored backup version is deleted.
 
 - Increased the font size in the full-archive ASCII configuration viewer for improved readability.
 
