@@ -61,7 +61,7 @@ if (configured && FabricNavigatorApiToken.createdAt() > 0) {
   <title>API &middot; FabricNavigator</title>
   <script>(function(){try{document.documentElement.setAttribute('data-theme',parent.document.documentElement.getAttribute('data-theme')||localStorage.getItem('edmTheme')||'light');document.documentElement.lang=parent.document.documentElement.lang||'de';}catch(e){}})();</script>
   <link rel="stylesheet" href="/assets/security.css">
-  <link rel="stylesheet" href="/assets/app-shell.css?v=20260905-240">
+  <link rel="stylesheet" href="/assets/app-shell.css?v=20260906-242">
   <style>
     html,body{background:transparent!important}body{margin:0;padding:2px}.fn-api-grid{display:grid;gap:18px}
     .fn-api-card{background:var(--fn-panel);border:1px solid var(--fn-border);border-top:4px solid var(--fn-accent);border-radius:14px;padding:22px;color:var(--fn-text)}
