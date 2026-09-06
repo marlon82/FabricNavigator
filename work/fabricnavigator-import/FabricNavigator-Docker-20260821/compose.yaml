@@ -8,7 +8,7 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.254"
+      FABRICNAVIGATOR_VERSION: "26.09.10.255"
       FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD:-CONFIGBACKUP}"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
       FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
@@ -54,6 +54,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/index.jsp:/opt/tomcat/webapps/ROOT/topology/index.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/service-action.jsp:/opt/tomcat/webapps/ROOT/topology/service-action.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/ping-action.jsp:/opt/tomcat/webapps/ROOT/topology/ping-action.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/config-backup-action.jsp:/opt/tomcat/webapps/ROOT/topology/config-backup-action.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/topology/physical-ports.jsp:/opt/tomcat/webapps/ROOT/topology/physical-ports.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/snmp/get-variables.jsp:/opt/tomcat/webapps/ROOT/snmp/get-variables.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/devices/index.jsp:/opt/tomcat/webapps/ROOT/devices/index.jsp:ro
@@ -75,6 +76,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/system-features.js:/opt/tomcat/webapps/ROOT/assets/system-features.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.css:/opt/tomcat/webapps/ROOT/assets/app-shell.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.js:/opt/tomcat/webapps/ROOT/assets/service-ui.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/config-backup-topology.js:/opt/tomcat/webapps/ROOT/assets/config-backup-topology.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.css:/opt/tomcat/webapps/ROOT/assets/service-ui.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/update-channel.js:/opt/tomcat/webapps/ROOT/assets/update-channel.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/offline-packages.js:/opt/tomcat/webapps/ROOT/assets/offline-packages.js:ro

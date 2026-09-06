@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.254
+# FabricNavigator 26.09.10.255
+
+- Added a feature-gated Back up configuration action under More Actions in the topology context menu for supported FabricEngine, VSP, VOSS, SwitchEngine, and EXOS devices.
 
 - Prevented the configuration viewer from reopening after a stored backup version is deleted.
 

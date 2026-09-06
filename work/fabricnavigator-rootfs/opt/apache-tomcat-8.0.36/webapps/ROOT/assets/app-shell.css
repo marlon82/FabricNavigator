@@ -691,3 +691,5 @@ html body .fn-view-dialog{place-items:start center!important;padding-top:4px!imp
 
 /* Improve readability of stored switch configurations. */
 .fn-view-config{font-size:13px!important;line-height:1.5!important}
+
+.fn-config-backup-progress section{width:min(600px,calc(100vw - 28px))}.fn-config-backup-track{height:8px;margin:14px 0;border-radius:999px;overflow:hidden;background:color-mix(in srgb,var(--fn-accent) 14%,var(--fn-panel))}.fn-config-backup-track span{display:block;width:0;height:100%;border-radius:inherit;background:var(--fn-accent);transition:width .25s ease}.fn-config-backup-results{display:grid;gap:6px;max-height:260px;overflow:auto}.fn-config-backup-results>div{padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--fn-accent) 6%,var(--fn-panel));color:var(--fn-text);font-size:11px}.fn-config-backup-results>.ok{border-left:3px solid #15915f}.fn-config-backup-results>.error{border-left:3px solid #d92d20;color:#b42318}
