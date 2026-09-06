@@ -1,3 +1,7 @@
+# FabricNavigator 26.09.10.276
+
+- Hid the vIST cluster row completely in node hover details unless the node belongs to a detected vIST cluster.
+
 # FabricNavigator 26.09.10.275
 
 - Fixed Group selection in the node context menu after the original grouping control has been moved into the Actions toolbox.
