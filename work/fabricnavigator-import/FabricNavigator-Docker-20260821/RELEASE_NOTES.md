@@ -1,4 +1,13 @@
-# FabricNavigator 26.09.10.246
+# FabricNavigator 26.09.10.247
+
+- Added protected local switch configuration backups for FabricEngine, VSP, SwitchEngine, and EXOS devices using assigned SSH credentials and approved host keys.
+- FabricEngine, VSP, and VOSS backups now use `backup configure` and retrieve the complete device archive over SCP while retaining a normalized text copy for diffs.
+- Added command-based platform probing and resilient SSH host-key verification so devices without an explicit operating-system marker can still be backed up reliably.
+- Added optional scheduled backups with configurable intervals and per-device retention.
+- Added arbitrary version comparison with color-coded added and removed configuration lines.
+- Added guarded restoration of older configurations with an automatic pre-restore safety backup and post-restore verification capture.
+- Added configuration version metadata for capture time, capture source, FabricNavigator operator, change attribution, platform, and SHA-256 integrity.
+- Added a dedicated Administration tab for backups, version history, downloads, comparisons, restore confirmation, and operation progress.
 
 - Added design-consistent hover help to every topology Actions button, explaining its behavior and selection scope in German and English.
 - Replaced the demo topology quantity fields with live range sliders, constrained core and distribution device counts to increments of two, and added an option to generate the demo with or without topology groups.

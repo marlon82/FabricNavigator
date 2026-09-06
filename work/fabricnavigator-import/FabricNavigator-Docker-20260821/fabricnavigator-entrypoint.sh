@@ -16,6 +16,7 @@ ROUTE_FILE="$DATA_DIR/static-routes.conf"
 ACLI_CONFIG="$DATA_DIR/acli.ini"
 ACLI_LOG_DIR="$DATA_DIR/acli-logs"
 API_DATA_DIR="$DATA_DIR/api"
+CONFIG_BACKUP_DIR="$DATA_DIR/config-backups"
 mkdir -p "$UPDATE_DIR"
 # The directory contains only update requests and public release metadata. It
 # must be writable by Tomcat and readable by the separate Windows host updater.
@@ -26,6 +27,7 @@ chmod 0777 "$UPDATE_DIR" 2>/dev/null || true
 mkdir -p "$DATA_DIR"
 mkdir -p "$ACLI_LOG_DIR"
 mkdir -p "$API_DATA_DIR"
+mkdir -p "$CONFIG_BACKUP_DIR"
 if [ ! -f "$ACLI_CONFIG" ]; then
   cp /opt/acli-web/acli-default.ini "$ACLI_CONFIG"
 fi
@@ -41,6 +43,8 @@ chmod 0600 "$ACLI_CONFIG" 2>/dev/null || true
 # directories that earlier builds may have created as root during startup.
 chown -R tomcat:tomcat "$API_DATA_DIR" 2>/dev/null || true
 chmod 0700 "$API_DATA_DIR" 2>/dev/null || true
+chown -R tomcat:tomcat "$CONFIG_BACKUP_DIR" 2>/dev/null || true
+chmod 0700 "$CONFIG_BACKUP_DIR" 2>/dev/null || true
 if [ -f "$API_DATA_DIR/fabricnavigator-api.properties" ]; then
   chmod 0600 "$API_DATA_DIR/fabricnavigator-api.properties" 2>/dev/null || true
 fi
@@ -68,7 +72,7 @@ if [ -d /opt/fabricnavigator/snmp-src ]; then
   rm -rf "$snmp_classes"
   mkdir -p "$snmp_classes"
   /opt/java8/bin/java -cp /opt/tomcat/lib/ecj-4.5.jar org.eclipse.jdt.internal.compiler.batch.Main \
-    -1.8 -d "$snmp_classes" -classpath /opt/fabricnavigator/snmp4j-2.8.18.jar \
+    -1.8 -encoding UTF-8 -d "$snmp_classes" -classpath /opt/fabricnavigator/snmp4j-2.8.18.jar:/opt/tomcat/lib/fabricnavigator-security.jar:/opt/tomcat/lib/servlet-api.jar \
     /opt/fabricnavigator/snmp-src
   if [ "$?" -ne 0 ]; then
     echo "FabricNavigator SNMP adapter compilation failed" >&2

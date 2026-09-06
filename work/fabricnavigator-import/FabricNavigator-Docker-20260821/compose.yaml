@@ -8,7 +8,7 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.246"
+      FABRICNAVIGATOR_VERSION: "26.09.10.247"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
       FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
       FABRICNAVIGATOR_GITHUB_TOKEN_FILE: "/run/secrets/github-update-token.txt"
@@ -28,6 +28,7 @@ services:
       - ./update-coordinator.py:/opt/fabricnavigator/update-coordinator.py:ro
       - ./ssh-probe.pl:/opt/fabricnavigator/ssh-probe.pl:ro
       - ./service-provision.pl:/opt/fabricnavigator/service-provision.pl:ro
+      - ./config-backup.pl:/opt/fabricnavigator/config-backup.pl:ro
       - ../../acli-src/opt/acli/acli.pl:/opt/acli/acli-terminal.pl:ro
       - ../../acli-src/opt/acli/AcliPm/HandleDeviceOutput.pm:/opt/acli/AcliPm/HandleDeviceOutput.pm:ro
       - ../../acli-src/opt/acli/AcliPm/ExitHandlers.pm:/opt/acli/AcliPm/ExitHandlers.pm:ro
@@ -62,6 +63,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/discovery.jsp:/opt/tomcat/webapps/ROOT/admin/discovery.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/acli-settings.jsp:/opt/tomcat/webapps/ROOT/admin/acli-settings.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/api.jsp:/opt/tomcat/webapps/ROOT/admin/api.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/config-backups.jsp:/opt/tomcat/webapps/ROOT/admin/config-backups.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/api-sessions.jsp:/opt/tomcat/webapps/ROOT/api-sessions.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/system.jsp:/opt/tomcat/webapps/ROOT/admin/system.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/update.jsp:/opt/tomcat/webapps/ROOT/admin/update.jsp:ro
