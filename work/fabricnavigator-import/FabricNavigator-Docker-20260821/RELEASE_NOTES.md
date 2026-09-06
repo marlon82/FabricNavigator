@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.263
+
+- Added configuration backup to the topology Actions panel and aligned its availability with the node context menu.
+- Fixed backup availability for loaded or older topologies by recognizing an active SSH action even when the stored topology SSH flag is missing.
+- Added an in-design help tooltip for the configuration backup action.
+
 # FabricNavigator 26.09.10.262
 
 - Added a protected Delete all backups action with a FabricNavigator confirmation dialog and audit entry.
