@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.277
+
+- Prevented the movable Actions toolbox from overlapping Topology Tools when tool sections are expanded, collapsed, or moved.
+- Reduced the minimum tool-rail height on short browser windows so the docked Actions toolbox always retains its gap.
+
 # FabricNavigator 26.09.10.276
 
 - Hid the vIST cluster row completely in node hover details unless the node belongs to a detected vIST cluster.
