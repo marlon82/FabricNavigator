@@ -317,4 +317,4 @@ window.updateAllGeometry=updateAllGeometry;
 window.renderTopology=function(){renderTopology();};
  renderFilters();refreshSavedOptions();if(!data&&!wasPosted){var defaultName=defaultTopologyName();if(defaultName&&readSaved()[defaultName]){try{restoreLocalTopology(defaultName,false);var discoveryCard=document.querySelector('.discovery-card');if(discoveryCard)discoveryCard.open=false;}catch(ignored){}}}if(data&&!nameInput.value)savedSelect.selectedIndex=-1;applyLanguage();if(wasPosted&&data)markTopologyDirty();else syncTopologyDirtyUi();
 }());
-</script><script src="/assets/app-shell.js?v=20260905-240"></script><script src="/assets/service-ui.js?v=20260905-240"></script></body></html>
+</script><script src="/assets/app-shell.js?v=20260906-241"></script><script src="/assets/service-ui.js?v=20260905-240"></script></body></html>
