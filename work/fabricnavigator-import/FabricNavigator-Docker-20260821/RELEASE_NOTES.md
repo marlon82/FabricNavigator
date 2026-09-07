@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.284
+# FabricNavigator 26.09.10.285
+
+- Restores device images after generating a demo topology and assigns clearly distinct frame colors to different SPBM areas.
 
 - Keeps nodes from the same SPBM area together during automatic topology layout, while preserving manually positioned nodes.
 
