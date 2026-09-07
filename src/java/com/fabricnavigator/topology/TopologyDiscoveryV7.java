@@ -121,7 +121,7 @@ public final class TopologyDiscoveryV7 {
                     node.sysDescr = TopologyDiscoveryV7.clean(sessionMatch.sysDescr);
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
                     result.addDebug("device host=" + queueItem.ip + " event=identified name=\"" + node.name + "\" sysObjectId=\"" + TopologyDiscoveryV7.clean(sessionMatch.sysObjectId) + "\" fabricEngine=" + (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)));
-                    if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)) {
+                    if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId) && !TopologyDiscoveryV7.ethernetRoutingSwitchSystem(node.sysDescr)) {
                         TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
                         if (node.vistActive) {
                             TopologyDiscoveryV7.readLocalIpv4Addresses(snmpUtilV3, node);
@@ -663,6 +663,11 @@ public final class TopologyDiscoveryV7 {
     public static boolean fabricEngineSystem(String string) {
         String string2 = TopologyDiscoveryV7.clean(string).toLowerCase(Locale.ENGLISH);
         return string2.contains("fabricengine") || string2.contains("fabric engine") || string2.contains("voss") || string2.contains("virtual services platform") || string2.matches(".*\\bvsp[- ]?[0-9].*");
+    }
+
+    public static boolean ethernetRoutingSwitchSystem(String string) {
+        String value = TopologyDiscoveryV7.clean(string).toLowerCase(Locale.ENGLISH);
+        return value.contains("ethernet routing switch") || value.matches(".*\\bers[- ]?[0-9]{3,4}\\b.*");
     }
 
     private static boolean rapidCitySystem(String sysObjectId) {

@@ -1,8 +1,11 @@
-# FabricNavigator 26.09.10.297
+# FabricNavigator 26.09.10.298
 
-- Resolves Virtual IST peers when the peer address is an internal transit address rather than the device management address.
-- Restores embedded SSH sessions by creating the protected terminal runtime directory during every container start.
-- Verifies the SSH fix with a live SwitchEngine/EXOS session through the FabricNavigator web terminal.
+- Correctly identifies Ethernet Routing Switch (ERS) devices instead of treating them as FabricEngine switches.
+- Adds a dedicated generic ERS front-panel icon with a blue ERS identifier while preserving topology and cluster frame colors.
+- Preserves resolved Virtual IST peer node identifiers in the topology UI so detected vIST pairs can be rendered correctly.
+- Adds optional, comprehensive discovery diagnostics covering SNMP attempts, processing stages, LLDP tables, detected capabilities, links, and error classes without logging credentials or secrets.
+- Fixes the discovery settings path so SNMP timeout, retry, and debug settings configured in Administration are applied by the discovery engine.
+- Prevents a deliberately closed SSH dialog from being restored when navigating to another page.
 
 ## Beta notice
 
