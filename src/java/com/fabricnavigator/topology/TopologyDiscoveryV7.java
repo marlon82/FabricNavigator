@@ -313,6 +313,11 @@ public final class TopologyDiscoveryV7 {
                 LinkedHashSet<String> areas = byInstance.get(instances.get(i));
                 if (areas != null) node.spbmRemoteAreas.addAll(areas);
             }
+            if (!node.spbmHomeArea.isEmpty()) {
+                while (node.spbmRemoteAreas.remove(node.spbmHomeArea)) {
+                    // A node's home area cannot simultaneously be one of its remote areas.
+                }
+            }
         } catch (Exception ignored) {
             // IS-IS area data is optional and older firmware may not expose RFC 4444.
         }

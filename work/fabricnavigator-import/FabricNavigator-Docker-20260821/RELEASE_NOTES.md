@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.290
+# FabricNavigator 26.09.10.291
+
+- Prevents identical SPBM home and remote areas on one node and places demo area groups into guaranteed non-overlapping regions.
 
 - Restores mouse dragging and selection for demo nodes with an invisible rectangular hit target, without bringing back the legacy circles.
 
