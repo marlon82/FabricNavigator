@@ -61,6 +61,18 @@ public class SnmpUtilV3 {
         if (target != null) target.setTimeout(timeout);
     }
 
+    public boolean supportsContextName() {
+        return target != null && target.getVersion() == SnmpConstants.version3;
+    }
+
+    public String getContextName() {
+        return context;
+    }
+
+    public void setContextName(String contextName) {
+        context = contextName == null ? "" : contextName;
+    }
+
     public String openSession(String host, String readCommunity, String writeCommunity) throws Exception {
         closeSession();
         targetIp = validHost(host);

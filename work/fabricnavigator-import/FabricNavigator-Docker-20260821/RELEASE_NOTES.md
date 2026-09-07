@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.291
+# FabricNavigator 26.09.10.292
+
+- Correctly reads Fabric Engine SPBM home-area addresses from the default SNMP context and remote-area addresses from the `isisRemoteArea` SNMPv3 context, including RFC 4444 table-index decoding.
 
 - Prevents identical SPBM home and remote areas on one node and places demo area groups into guaranteed non-overlapping regions.
 

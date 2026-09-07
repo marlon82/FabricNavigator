@@ -37,7 +37,7 @@ public final class TopologyDiscoveryV7 {
     private static final int[] ISIS_ADJ_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 6, 1, 1, 2};
     private static final int[] RC_ISIS_ADJ_IF_INDEX_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 63, 10, 1, 4};
     private static final int[] ISIS_MAN_AREA_EXIST_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 1, 2, 1, 2};
-    private static final int[] ISIS_LEARNED_AREA_EXIST_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 1, 3, 1, 2};
+    private static final String ISIS_REMOTE_AREA_CONTEXT = "isisRemoteArea";
     private static final int[] IF_NAME_OID = new int[]{1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1};
     private static final int[] IF_DESCR_OID = new int[]{1, 3, 6, 1, 2, 1, 2, 2, 1, 2};
     private static final int[] VIRTUAL_IST_STATUS_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 1, 0};
@@ -300,40 +300,41 @@ public final class TopologyDiscoveryV7 {
     }
 
     private static void readSpbmAreas(SnmpUtilV3 snmpUtilV3, Node node) {
+        String originalContext = snmpUtilV3.getContextName();
         try {
-            Map<Integer, LinkedHashSet<String>> byInstance = new LinkedHashMap<Integer, LinkedHashSet<String>>();
-            collectAreas(snmpUtilV3, ISIS_MAN_AREA_EXIST_STATE_OID, byInstance);
-            if (byInstance.isEmpty()) collectAreas(snmpUtilV3, ISIS_LEARNED_AREA_EXIST_STATE_OID, byInstance);
-            if (byInstance.isEmpty()) return;
-            List<Integer> instances = new ArrayList<Integer>(byInstance.keySet());
-            Collections.sort(instances);
-            LinkedHashSet<String> home = byInstance.get(instances.get(0));
-            if (home != null && !home.isEmpty()) node.spbmHomeArea = home.iterator().next();
-            for (int i = 1; i < instances.size(); i++) {
-                LinkedHashSet<String> areas = byInstance.get(instances.get(i));
-                if (areas != null) node.spbmRemoteAreas.addAll(areas);
-            }
-            if (!node.spbmHomeArea.isEmpty()) {
-                while (node.spbmRemoteAreas.remove(node.spbmHomeArea)) {
-                    // A node's home area cannot simultaneously be one of its remote areas.
+            if (snmpUtilV3.supportsContextName()) snmpUtilV3.setContextName("");
+            LinkedHashSet<String> homeAreas = configuredIsisAreas(snmpUtilV3);
+            if (!homeAreas.isEmpty()) node.spbmHomeArea = homeAreas.iterator().next();
+
+            // Fabric Engine exposes its second IS-IS instance through the
+            // SNMPv3 context "isisRemoteArea", not through another table index.
+            if (snmpUtilV3.supportsContextName()) {
+                snmpUtilV3.setContextName(ISIS_REMOTE_AREA_CONTEXT);
+                LinkedHashSet<String> remoteAreas = configuredIsisAreas(snmpUtilV3);
+                for (String area : remoteAreas) {
+                    if (!area.equals(node.spbmHomeArea) && !node.spbmRemoteAreas.contains(area)) {
+                        node.spbmRemoteAreas.add(area);
+                    }
                 }
             }
         } catch (Exception ignored) {
-            // IS-IS area data is optional and older firmware may not expose RFC 4444.
+            // Area data is optional. Non-boundary nodes normally reject or do
+            // not expose the remote context, while older firmware can omit it.
+        } finally {
+            snmpUtilV3.setContextName(originalContext);
         }
     }
 
-    private static void collectAreas(SnmpUtilV3 snmp, int[] oid, Map<Integer, LinkedHashSet<String>> target) throws Exception {
-        for (WalkEntry entry : TopologyDiscoveryV7.walkOid(snmp, oid)) {
-            if (entry.suffix.length < 3 || !isisAreaRowActive(entry.value)) continue;
-            int instance = entry.suffix[0], length = entry.suffix[1];
-            if (instance <= 0 || length <= 0 || entry.suffix.length < length + 2) continue;
-            String area = formatArea(entry.suffix, 2, length);
-            if (area.length() == 0) continue;
-            LinkedHashSet<String> values = target.get(instance);
-            if (values == null) { values = new LinkedHashSet<String>(); target.put(instance, values); }
-            values.add(area);
+    private static LinkedHashSet<String> configuredIsisAreas(SnmpUtilV3 snmp) throws Exception {
+        LinkedHashSet<String> areas = new LinkedHashSet<String>();
+        for (WalkEntry entry : TopologyDiscoveryV7.walkOid(snmp, ISIS_MAN_AREA_EXIST_STATE_OID)) {
+            if (entry.suffix.length < 2 || !isisAreaRowActive(entry.value)) continue;
+            int length = entry.suffix[0];
+            if (length <= 0 || entry.suffix.length < length + 1) continue;
+            String area = formatArea(entry.suffix, 1, length);
+            if (area.length() > 0) areas.add(area);
         }
+        return areas;
     }
 
     private static boolean isisAreaRowActive(String value) {
