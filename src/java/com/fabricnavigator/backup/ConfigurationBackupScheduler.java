@@ -21,6 +21,8 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     private static final Path STATUS=ROOT.resolve("status.properties");
     private static final Object LOCK=new Object();
     private static final ConcurrentMap<String,Object> DEVICE_LOCKS=new ConcurrentHashMap<String,Object>();
+    private static final ExecutorService MANUAL_EXECUTOR=Executors.newSingleThreadExecutor(new ThreadFactory(){public Thread newThread(Runnable r){Thread t=new Thread(r,"fabricnavigator-manual-config-backup");t.setDaemon(true);return t;}});
+    private static boolean MANUAL_RUNNING=false;
     private ScheduledExecutorService executor;
 
     public static final class Record {
@@ -45,6 +47,15 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     }
     public static Properties status(){return readProperties(STATUS);}
 
+    public static synchronized boolean startCaptureAll(final String actor,final String source,final String remote){
+        FeatureFlags.requireConfigurationBackup();
+        if(MANUAL_RUNNING)return false;
+        MANUAL_RUNNING=true;
+        writeStatus("running","Configuration backup is queued",0,0,0);
+        MANUAL_EXECUTOR.submit(new Runnable(){public void run(){try{captureAll(actor,source,remote);}catch(Exception ex){writeStatus("error",safeMessage(ex),0,1,0);}finally{synchronized(ConfigurationBackupScheduler.class){MANUAL_RUNNING=false;}}}});
+        return true;
+    }
+
     private static void scheduledRun(){
         try{
             if(!FeatureFlags.configurationBackupEnabled())return;
@@ -56,12 +67,13 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     public static int[] captureAll(String actor,String source,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
-        int ok=0,failed=0;writeStatus("running","Configuration backup is running",0,0);List<String> devices=new ArrayList<String>();
+        int ok=0,failed=0;List<String> devices=new ArrayList<String>();
         for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId!=null&&sshId.length()>0)devices.add(device);}
+        writeStatus("running","Configuration backup is running",0,0,devices.size());
         ExecutorService workers=Executors.newFixedThreadPool(Math.min(parallelism(),Math.max(1,devices.size())));CompletionService<Boolean> completed=new ExecutorCompletionService<Boolean>(workers);
         for(final String device:devices)completed.submit(new Callable<Boolean>(){public Boolean call(){try{capture(device,actor,source,remote);return Boolean.TRUE;}catch(Exception ex){try{AuditLog.log(actor,"FAILED_CONFIG_BACKUP",device+" · "+safeMessage(ex),remote);}catch(Exception ignored){}return Boolean.FALSE;}}});
-        try{for(int index=0;index<devices.size();index++){if(Boolean.TRUE.equals(completed.take().get()))ok++;else failed++;writeStatus("running","Configuration backup is running",ok,failed);}}finally{workers.shutdownNow();}
-        writeStatus(failed>0?"warning":"success",ok+" device(s) backed up · "+failed+" failed",ok,failed);return new int[]{ok,failed};
+        try{for(int index=0;index<devices.size();index++){if(Boolean.TRUE.equals(completed.take().get()))ok++;else failed++;writeStatus("running","Configuration backup is running",ok,failed,devices.size());}}finally{workers.shutdownNow();}
+        writeStatus(failed>0?"warning":"success",ok+" device(s) backed up · "+failed+" failed",ok,failed,devices.size());return new int[]{ok,failed};
     }
 
     public static Record capture(String device,String actor,String source,String remote) throws Exception{
@@ -142,5 +154,6 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     private static int parseInt(String value,int fallback){try{return Integer.parseInt(value);}catch(Exception ex){return fallback;}}
     private static String clean(String value){if(value==null)return "";return value.replaceAll("[\\r\\n\\t]"," ").trim();}
     private static String safeMessage(Exception ex){String message=ex.getMessage();return message==null?ex.getClass().getSimpleName():clean(message);}
-    private static void writeStatus(String state,String message,int success,int failed){Properties p=new Properties();p.setProperty("state",state);p.setProperty("message",message==null?"":message);p.setProperty("success",Integer.toString(success));p.setProperty("failed",Integer.toString(failed));p.setProperty("updatedAt",Instant.now().toString());writeProperties(STATUS,p,"FabricNavigator configuration backup status");}
+    private static void writeStatus(String state,String message,int success,int failed){writeStatus(state,message,success,failed,success+failed);}
+    private static void writeStatus(String state,String message,int success,int failed,int total){Properties p=new Properties();p.setProperty("state",state);p.setProperty("message",message==null?"":message);p.setProperty("success",Integer.toString(success));p.setProperty("failed",Integer.toString(failed));p.setProperty("total",Integer.toString(Math.max(total,success+failed)));p.setProperty("updatedAt",Instant.now().toString());writeProperties(STATUS,p,"FabricNavigator configuration backup status");}
 }

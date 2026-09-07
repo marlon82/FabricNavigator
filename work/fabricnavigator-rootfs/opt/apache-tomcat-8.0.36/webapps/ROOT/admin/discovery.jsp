@@ -25,12 +25,12 @@ Properties settings=currentSettings();
 int timeoutMs=setting(settings,"snmpTimeoutMs",DEFAULT_TIMEOUT_MS,MIN_TIMEOUT_MS,MAX_TIMEOUT_MS),retries=setting(settings,"snmpRetries",DEFAULT_RETRIES,MIN_RETRIES,MAX_RETRIES);
 if("POST".equalsIgnoreCase(request.getMethod())){
     if(!EdmSecurity.validCsrf(request)){response.sendError(403);return;}
-    try{if("clearLog".equals(request.getParameter("action"))){Files.deleteIfExists(DISCOVERY_LOG);AuditLog.log(EdmSecurity.currentUser(request),"DISCOVERY_LOG_CLEAR","Discovery log cleared",request.getRemoteAddr());flash="Discovery-Protokoll gelöscht.";}else{
+    try{if("clearLog".equals(request.getParameter("action"))){Files.deleteIfExists(DISCOVERY_LOG);AuditLog.log(EdmSecurity.currentUser(request),"DISCOVERY_LOG_CLEAR","Discovery log cleared",com.fabricnavigator.web.ClientAddress.of(request));flash="Discovery-Protokoll gelöscht.";}else{
         LinkedHashSet<String> rules=parseRules(request.getParameter("excludeRules"));
         timeoutMs=boundedInt(request.getParameter("snmpTimeoutMs"),MIN_TIMEOUT_MS,MAX_TIMEOUT_MS,"invalidTimeout");
         retries=boundedInt(request.getParameter("snmpRetries"),MIN_RETRIES,MAX_RETRIES,"invalidRetries");
         saveRules(rules);saveSettings(timeoutMs,retries);
-        AuditLog.log(EdmSecurity.currentUser(request),"DISCOVERY_SETTINGS_UPDATE","SNMP timeout="+timeoutMs+"ms · retries="+retries+" · excludes="+(rules.isEmpty()?"none":String.join(", ",rules)),request.getRemoteAddr());
+        AuditLog.log(EdmSecurity.currentUser(request),"DISCOVERY_SETTINGS_UPDATE","SNMP timeout="+timeoutMs+"ms · retries="+retries+" · excludes="+(rules.isEmpty()?"none":String.join(", ",rules)),com.fabricnavigator.web.ClientAddress.of(request));
         flash="Discovery-Einstellungen gespeichert.";
     }}catch(IllegalArgumentException ex){
         if("invalidTimeout".equals(ex.getMessage()))error="Der SNMP-Timeout muss zwischen 500 und 30000 Millisekunden liegen.";

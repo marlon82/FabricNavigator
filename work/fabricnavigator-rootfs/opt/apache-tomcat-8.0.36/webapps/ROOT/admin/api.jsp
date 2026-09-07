@@ -30,13 +30,13 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
             String label = request.getParameter("label");
             token = FabricNavigatorApiToken.generate(label);
             AuditLog.log(EdmSecurity.currentUser(request), "FABRICNAVIGATOR_API_TOKEN_CREATE",
-                "label=" + FabricNavigatorApiToken.label(), request.getRemoteAddr());
+                "label=" + FabricNavigatorApiToken.label(), com.fabricnavigator.web.ClientAddress.of(request));
             flash = "API-Token wurde erstellt. Kopiere ihn jetzt; er wird nicht erneut angezeigt.";
         } else if ("revoke".equals(action)) {
             String oldLabel = FabricNavigatorApiToken.label();
             FabricNavigatorApiToken.revoke();
             AuditLog.log(EdmSecurity.currentUser(request), "FABRICNAVIGATOR_API_TOKEN_REVOKE",
-                "label=" + oldLabel, request.getRemoteAddr());
+                "label=" + oldLabel, com.fabricnavigator.web.ClientAddress.of(request));
             flash = "API-Token wurde widerrufen.";
         } else {
             throw new IllegalArgumentException("invalidAction");

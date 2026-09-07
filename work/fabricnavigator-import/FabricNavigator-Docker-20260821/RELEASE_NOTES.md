@@ -1,3 +1,10 @@
+# FabricNavigator 26.09.10.282
+
+- Added consistent spacing between the Profile navigation and the SSH toolbar panel.
+- Removed empty lines and reduced vertical spacing in configuration diffs.
+- Changed “Back up all devices now” to run asynchronously and show live, non-blocking progress with success and error state.
+- Recorded the originating client IP address in audit entries instead of the local HTTPS proxy address.
+
 # FabricNavigator 26.09.10.281
 
 - Renamed the per-user SSH tab label setting to the central default device label setting.

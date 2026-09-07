@@ -5,7 +5,7 @@ String csrf=EdmSecurity.csrf(session);
 if("POST".equalsIgnoreCase(request.getMethod())){
  if(!EdmSecurity.validCsrf(request)){response.setStatus(403);error="Die Sitzung ist abgelaufen. Bitte erneut versuchen.";}
  else {String username=request.getParameter("username"),password=request.getParameter("password");
-  try{EdmSecurity.User user=EdmSecurity.login(username,password,request.getRemoteAddr());if(user==null){Thread.sleep(350);error=EdmSecurity.isLoginBlocked(username,request.getRemoteAddr())?"Zu viele Fehlversuche. Anmeldung vorübergehend gesperrt.":"Benutzername oder Passwort ist ungültig.";}else{request.changeSessionId();session.setMaxInactiveInterval(1800);session.setAttribute("edm.auth.user",user.username);session.setAttribute("edm.auth.role",user.role);EdmSecurity.setAuthCookie(response,EdmSecurity.createAuthToken(user.username));response.sendRedirect(next);return;}}
+  try{EdmSecurity.User user=EdmSecurity.login(username,password,com.fabricnavigator.web.ClientAddress.of(request));if(user==null){Thread.sleep(350);error=EdmSecurity.isLoginBlocked(username,com.fabricnavigator.web.ClientAddress.of(request))?"Zu viele Fehlversuche. Anmeldung vorübergehend gesperrt.":"Benutzername oder Passwort ist ungültig.";}else{request.changeSessionId();session.setMaxInactiveInterval(1800);session.setAttribute("edm.auth.user",user.username);session.setAttribute("edm.auth.role",user.role);EdmSecurity.setAuthCookie(response,EdmSecurity.createAuthToken(user.username));response.sendRedirect(next);return;}}
   catch(Exception ex){response.setStatus(500);error="Die Anmeldung ist momentan nicht verfügbar.";}
  }
 }

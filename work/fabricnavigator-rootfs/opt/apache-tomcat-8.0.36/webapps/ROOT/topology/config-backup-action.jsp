@@ -8,7 +8,7 @@ if(!EdmSecurity.validCsrf(request)){response.setStatus(403);out.print("{\"ok\":f
 if(!FeatureFlags.configurationBackupEnabled()){response.setStatus(404);out.print("{\"ok\":false,\"error\":\"Configuration backup feature is not enabled\"}");return;}
 String host=request.getParameter("host");
 try{
-    Record record=ConfigurationBackupScheduler.capture(host,EdmSecurity.currentUser(request),"topology-context",request.getRemoteAddr());
+    Record record=ConfigurationBackupScheduler.capture(host,EdmSecurity.currentUser(request),"topology-context",com.fabricnavigator.web.ClientAddress.of(request));
     out.print("{\"ok\":true,\"host\":\""+j(host)+"\",\"version\":\""+j(record.id)+"\",\"platform\":\""+j(record.platform)+"\",\"capturedAt\":\""+j(record.capturedAt)+"\"}");
 }catch(Exception error){
     response.setStatus(422);

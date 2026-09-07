@@ -13,7 +13,7 @@ if(!EdmSecurity.isAdmin(request)){response.sendError(403);return;}
 String csrf=EdmSecurity.csrf(session),flash="",error="";
 if("POST".equalsIgnoreCase(request.getMethod())){
  if(!EdmSecurity.validCsrf(request)){response.sendError(403);return;}
- try{boolean value="true".equals(request.getParameter("preferOpenApi"));save(value);AuditLog.log(EdmSecurity.currentUser(request),"OPENAPI_PREFERENCE_CHANGED","preferred="+value,request.getRemoteAddr());flash="saved";}catch(Exception ex){error="saveFailed";}
+ try{boolean value="true".equals(request.getParameter("preferOpenApi"));save(value);AuditLog.log(EdmSecurity.currentUser(request),"OPENAPI_PREFERENCE_CHANGED","preferred="+value,com.fabricnavigator.web.ClientAddress.of(request));flash="saved";}catch(Exception ex){error="saveFailed";}
 }
 boolean preferOpenApi=preferred();
 %>
