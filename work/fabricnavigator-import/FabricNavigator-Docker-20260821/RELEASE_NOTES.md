@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.285
+# FabricNavigator 26.09.10.286
+
+- Prevents SPBM area frames from overlapping by separating complete area groups after automatic layout.
 
 - Restores device images after generating a demo topology and assigns clearly distinct frame colors to different SPBM areas.
 
