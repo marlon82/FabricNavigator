@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.283
+# FabricNavigator 26.09.10.284
+
+- Keeps nodes from the same SPBM area together during automatic topology layout, while preserving manually positioned nodes.
 
 ## Changes
 
