@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.289
+# FabricNavigator 26.09.10.290
+
+- Restores mouse dragging and selection for demo nodes with an invisible rectangular hit target, without bringing back the legacy circles.
 
 - Keeps the Actions toolbox docked below the complete expanded Topology tools panel and removes legacy node circles from the demo topology.
 
