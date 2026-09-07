@@ -1,3 +1,7 @@
+# FabricNavigator 26.09.10.294
+
+- Restores the Administration → System page by removing a stale OpenAPI settings fragment that still referenced a retired server-side method. Device API preferences remain available in Administration → General.
+
 # FabricNavigator 26.09.10.293
 
 - Hides SPBM home/remote area rows completely unless a FabricEngine/VSP/VOSS node belongs to a real multi-area topology and has both values.
