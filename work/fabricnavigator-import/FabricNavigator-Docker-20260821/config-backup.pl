@@ -61,6 +61,8 @@ sub configuration_probe {
 }
 
 my $identity=clean_output(run_command('show switch',7).run_command('show sys-info',7).run_command('show version',7));
+my $software_version='';
+if($identity=~/(?:software\s+version|software\s+release|image\s+version|extremexos\s+version|primary\s+ver(?:sion)?)\s*(?::|=|is)?\s*[vV]?([0-9]+(?:\.[0-9A-Za-z_-]+){1,7})/i){$software_version=$1}
 my $platform=$requested_platform;
 if($platform!~/^(?:fabricengine|switchengine)$/){
   if($identity=~/(?:ExtremeXOS|Switch\s*Engine|\bEXOS\b)/i){$platform='switchengine'}
@@ -103,6 +105,7 @@ if($action eq 'backup'){
     run_command("delete $remote",3);run_command('y',3);
   }
   print "FN_PLATFORM=$platform\n";
+  print "FN_SOFTWARE_VERSION=$software_version\n" if length($software_version);
   print "FN_ARCHIVE_NAME=$archive_name\nFN_ARCHIVE_BEGIN\n$archive_base64\n" if length($archive_base64);
   print "FN_CONFIG_BEGIN\n$output";
 }else{

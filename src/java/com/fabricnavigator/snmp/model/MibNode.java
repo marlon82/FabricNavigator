@@ -41,6 +41,8 @@ public final class MibNode {
         put(values, "entPhysicalDescr", "1.3.6.1.2.1.47.1.1.1.1.2");
         put(values, "entPhysicalName", "1.3.6.1.2.1.47.1.1.1.1.7");
         put(values, "entAliasMappingIdentifier", "1.3.6.1.2.1.47.1.3.2.1.2");
+        put(values, "rcPortAutoSense", "1.3.6.1.4.1.2272.1.4.10.1.1.130");
+        put(values, "rcPortAutoSenseState", "1.3.6.1.4.1.2272.1.4.10.1.1.134");
         OIDS = Collections.unmodifiableMap(values);
     }
 
