@@ -1,14 +1,11 @@
-# FabricNavigator 26.09.10.300
+# FabricNavigator 26.09.10.301
 
-- Adds per-port Auto-Sense state to topology link details for FabricEngine, VOSS, and VSP devices, including UNI, NNI, IS-IS, Fabric Attach, and disabled states.
-- Removes the browser-generated rectangular focus outline shown after selecting a topology link.
-- Prevents stale “session closed” content from flashing while an SSH session reconnects.
-- Adds the captured switch software version to stored configuration backup versions and audit details.
-- Adds configuration viewing for SwitchEngine and EXOS backups, and improves the movable and resizable configuration viewer.
-- Keeps configuration backups in the background, preserves progress across page navigation, and identifies failed devices with their error details.
-- Improves configuration comment filtering by removing the resulting empty lines.
-- Uses the global device name/IP preference consistently in configuration backup device selectors and clarifies the related profile setting.
-- Prevents the first login attempt after an update from being rejected solely because the previous server session was replaced.
+- Adds a configurable application time zone under Administration → System while continuing to store canonical timestamps in UTC.
+- Displays configuration-backup timestamps in the compact `YYYY-MM-DD HH:mm:ss` format using the configured time zone.
+- Sorts stored configuration versions by the user's global device-name or IP-address preference.
+- Adds per-device selection for scheduled automatic configuration backups without changing the manual “Back up all devices now” action.
+- Adds a sortable serial-number column to the Devices table, populated from the standard ENTITY-MIB when supported.
+- Allows a selected topology group object to act as the drag handle for an entire multi-selection instead of unexpectedly opening the group.
 
 ## Beta notice
 

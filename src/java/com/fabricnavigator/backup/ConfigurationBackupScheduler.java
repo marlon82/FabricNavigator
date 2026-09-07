@@ -1,6 +1,7 @@
 package com.fabricnavigator.backup;
 
 import com.fabricnavigator.security.AuditLog;
+import com.fabricnavigator.system.TimeSettings;
 import com.fabricnavigator.security.CredentialVault;
 import com.fabricnavigator.security.KnownHostsManager;
 import com.fabricnavigator.features.FeatureFlags;
@@ -40,11 +41,15 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
 
     public static Properties settings(){Properties p=readProperties(SETTINGS);if(!p.containsKey("enabled"))p.setProperty("enabled","false");if(!p.containsKey("intervalHours"))p.setProperty("intervalHours","24");if(!p.containsKey("retention"))p.setProperty("retention","10");if(!p.containsKey("parallelism"))p.setProperty("parallelism","3");return p;}
     public static int parallelism(){return Math.max(1,Math.min(10,parseInt(settings().getProperty("parallelism"),3)));}
-    public static void saveSettings(boolean enabled,int intervalHours,int retention,int parallelism,String actor,String remote) throws Exception{
+    public static void saveSettings(boolean enabled,int intervalHours,int retention,int parallelism,Collection<String> automaticDevices,String actor,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
         if(intervalHours<1||intervalHours>720||retention<1||retention>500||parallelism<1||parallelism>10)throw new IllegalArgumentException("Invalid backup settings");
-        Properties p=settings();p.setProperty("enabled",Boolean.toString(enabled));p.setProperty("intervalHours",Integer.toString(intervalHours));p.setProperty("retention",Integer.toString(retention));p.setProperty("parallelism",Integer.toString(parallelism));p.setProperty("updatedAt",Instant.now().toString());p.setProperty("updatedBy",clean(actor));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");AuditLog.log(actor,"CONFIG_BACKUP_SETTINGS","enabled="+enabled+" · interval="+intervalHours+"h · retention="+retention+" · parallelism="+parallelism,remote);
+        Set<String> allowed=new TreeSet<String>();for(String device:CredentialVault.listAssignedDevices())try{String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId!=null&&sshId.length()>0)allowed.add(device);}catch(Exception ignored){}
+        Set<String> selected=new TreeSet<String>();if(automaticDevices!=null)for(String device:automaticDevices){validateDevice(device);if(!allowed.contains(device))throw new IllegalArgumentException("Invalid automatic backup device: "+device);selected.add(device);}
+        Properties p=settings();p.setProperty("enabled",Boolean.toString(enabled));p.setProperty("intervalHours",Integer.toString(intervalHours));p.setProperty("retention",Integer.toString(retention));p.setProperty("parallelism",Integer.toString(parallelism));p.setProperty("automaticDeviceSelectionConfigured","true");p.setProperty("automaticDevices",joinComma(selected));p.setProperty("updatedAt",Instant.now().toString());p.setProperty("updatedBy",clean(actor));writeProperties(SETTINGS,p,"FabricNavigator configuration backup settings");AuditLog.log(actor,"CONFIG_BACKUP_SETTINGS","enabled="+enabled+" · interval="+intervalHours+"h · retention="+retention+" · parallelism="+parallelism+" · devices="+joinComma(selected),remote);
     }
+    public static boolean automaticDeviceSelectionConfigured(){return Boolean.parseBoolean(settings().getProperty("automaticDeviceSelectionConfigured","false"));}
+    public static Set<String> automaticDevices(){Set<String> result=new TreeSet<String>();String value=settings().getProperty("automaticDevices","");for(String item:value.split(",")){item=item.trim();if(item.matches("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}"))result.add(item);}return result;}
     public static Properties status(){return readProperties(STATUS);}
 
     public static synchronized boolean startCaptureAll(final String actor,final String source,final String remote){
@@ -68,7 +73,8 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     public static int[] captureAll(String actor,String source,String remote) throws Exception{
         FeatureFlags.requireConfigurationBackup();
         int ok=0,failed=0;List<String> devices=new ArrayList<String>();
-        for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId!=null&&sshId.length()>0)devices.add(device);}
+        Set<String> scheduledSelection="scheduled".equals(source)&&automaticDeviceSelectionConfigured()?automaticDevices():null;
+        for(String device:new TreeSet<String>(CredentialVault.listAssignedDevices())){String sshId=CredentialVault.getDeviceCredentialId(device,CredentialVault.TYPE_SSH);if(sshId!=null&&sshId.length()>0&&(scheduledSelection==null||scheduledSelection.contains(device)))devices.add(device);}
         writeStatus("running","Configuration backup is running",0,0,devices.size());
         final List<String> failures=new ArrayList<String>();
         ExecutorService workers=Executors.newFixedThreadPool(Math.min(parallelism(),Math.max(1,devices.size())));CompletionService<BackupOutcome> completed=new ExecutorCompletionService<BackupOutcome>(workers);
@@ -136,7 +142,7 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
             AuditLog.log(actor,"CONFIG_BACKUPS_ALL_DELETED","versions="+count+" · devices="+deviceCount,remote);return count;}
     }
 
-    private static Record record(Path metadata) throws Exception{Properties p=readProperties(metadata);Record r=new Record();r.id=p.getProperty("id","");r.device=p.getProperty("device","");r.platform=p.getProperty("platform","");r.softwareVersion=p.getProperty("softwareVersion","");r.capturedAt=p.getProperty("capturedAt","");r.capturedAtMillis=Long.parseLong(p.getProperty("capturedAtMillis","0"));r.capturedBy=p.getProperty("capturedBy","");r.source=p.getProperty("source","");r.changeActor=p.getProperty("changeActor","");r.sha256=p.getProperty("sha256","");r.archiveSha256=p.getProperty("archiveSha256","");r.configuration=metadata.resolveSibling(r.id+".cfg");r.archive=metadata.resolveSibling(r.id+".tgz");if(!Files.isRegularFile(r.configuration))throw new FileNotFoundException();if(r.softwareVersion.length()==0)try{r.softwareVersion=configurationVersion(new String(Files.readAllBytes(r.configuration),StandardCharsets.UTF_8));}catch(Exception ignored){}return r;}
+    private static Record record(Path metadata) throws Exception{Properties p=readProperties(metadata);Record r=new Record();r.id=p.getProperty("id","");r.device=p.getProperty("device","");r.platform=p.getProperty("platform","");r.softwareVersion=p.getProperty("softwareVersion","");r.capturedAt=TimeSettings.formatInstant(p.getProperty("capturedAt",""));r.capturedAtMillis=Long.parseLong(p.getProperty("capturedAtMillis","0"));r.capturedBy=p.getProperty("capturedBy","");r.source=p.getProperty("source","");r.changeActor=p.getProperty("changeActor","");r.sha256=p.getProperty("sha256","");r.archiveSha256=p.getProperty("archiveSha256","");r.configuration=metadata.resolveSibling(r.id+".cfg");r.archive=metadata.resolveSibling(r.id+".tgz");if(!Files.isRegularFile(r.configuration))throw new FileNotFoundException();if(r.softwareVersion.length()==0)try{r.softwareVersion=configurationVersion(new String(Files.readAllBytes(r.configuration),StandardCharsets.UTF_8));}catch(Exception ignored){}return r;}
     private static Path deviceDirectory(String device){return ROOT.resolve(device.replace('.','_'));}
     private static Object deviceLock(String device){Object created=new Object(),existing=DEVICE_LOCKS.putIfAbsent(device,created);return existing==null?created:existing;}
     private static void validateDevice(String device){if(device==null||!device.matches("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}"))throw new IllegalArgumentException("Invalid device IP");for(String part:device.split("\\."))if(Integer.parseInt(part)>255)throw new IllegalArgumentException("Invalid device IP");}
@@ -167,4 +173,5 @@ public final class ConfigurationBackupScheduler implements ServletContextListene
     private static void writeStatus(String state,String message,int success,int failed,int total){writeStatus(state,message,success,failed,total,Collections.<String>emptyList());}
     private static void writeStatus(String state,String message,int success,int failed,int total,List<String> failures){Properties p=new Properties();p.setProperty("state",state);p.setProperty("message",message==null?"":message);p.setProperty("success",Integer.toString(success));p.setProperty("failed",Integer.toString(failed));p.setProperty("total",Integer.toString(Math.max(total,success+failed)));p.setProperty("failures",joinLines(failures));p.setProperty("updatedAt",Instant.now().toString());writeProperties(STATUS,p,"FabricNavigator configuration backup status");}
     private static String joinLines(List<String> values){StringBuilder out=new StringBuilder();for(String value:values){if(out.length()>0)out.append('\n');out.append(clean(value));}return out.toString();}
+    private static String joinComma(Collection<String> values){StringBuilder out=new StringBuilder();for(String value:values){if(out.length()>0)out.append(',');out.append(clean(value));}return out.toString();}
 }
