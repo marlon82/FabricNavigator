@@ -56,9 +56,15 @@ $linuxUpdater = Join-Path $PSScriptRoot '..\..\..\proxmox\guest\fabricnavigator-
 $linuxUpdaterService = Join-Path $PSScriptRoot '..\..\..\proxmox\guest\fabricnavigator-updater.service'
 $linuxUpdaterMigration = Join-Path $PSScriptRoot '..\..\..\proxmox\guest\migrate-fabricnavigator-updater.sh'
 $proxmoxCompose = Join-Path $PSScriptRoot '..\..\..\proxmox\guest\compose.proxmox.yaml'
+$tomcatVersion = '9.0.121'
+$tomcatArchive = Join-Path $PSScriptRoot "apache-tomcat-$tomcatVersion.tar.gz"
+$tomcatSha512 = '16494dd4745f808d3c506807b5275521fd71044d976f441d18eeeab0f5a38bc1b5344ca395292f6f26eb7612cd8c8e746d01ccdfb29893d394052d9f4b1f4c11'
 
-foreach ($required in @($composeTemplate, $notes, $installer, $updater, $linuxUpdater, $linuxUpdaterService, $linuxUpdaterMigration, $proxmoxCompose)) {
+foreach ($required in @($composeTemplate, $notes, $installer, $updater, $linuxUpdater, $linuxUpdaterService, $linuxUpdaterMigration, $proxmoxCompose, $tomcatArchive)) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Erforderliche Datei fehlt: $required" }
+}
+if ((Get-FileHash -Algorithm SHA512 -LiteralPath $tomcatArchive).Hash.ToLowerInvariant() -ne $tomcatSha512) {
+    throw "Die Apache-Tomcat-$tomcatVersion-Laufzeit hat nicht den erwarteten SHA-512-Digest."
 }
 
 $releaseNotes = [IO.File]::ReadAllText($notes)
@@ -120,11 +126,12 @@ try {
         (Join-Path $sourceRoot 'third_party\acli\LICENSE-GPL-3.0.txt') = 'opt/fabricnavigator/licenses/ACLI-LICENSE-GPL-3.0.txt'
         (Join-Path $sourceRoot 'third_party\xtermjs\LICENSE-MIT.txt') = 'opt/fabricnavigator/licenses/XTERMJS-LICENSE-MIT.txt'
         (Join-Path $workspaceRoot 'fabricnavigator-security\fabricnavigator-security.jar') = 'opt/tomcat/lib/fabricnavigator-security.jar'
+        $tomcatArchive = "opt/fabricnavigator/runtime/apache-tomcat-$tomcatVersion.tar.gz"
     }
     foreach ($relative in @(
         'terminal\index.jsp', 'webview-ticket.jsp', 'session-info.jsp', 'user-preferences.jsp', 'profile\index.jsp', 'profile\plugin-status.jsp', 'api-sessions.jsp', 'WEB-INF\web.xml',
         'login.jsp', 'setup.jsp', 'setup-credentials.jsp', 'topology\index.jsp', 'topology\service-action.jsp', 'topology\ping-action.jsp', 'topology\config-backup-action.jsp', 'snmp\get-variables.jsp', 'devices\index.jsp', 'credits\index.jsp', 'config-backups\index.jsp', 'index.jsp', 'admin\index.jsp',
-        'admin\webview-profiles.jsp', 'admin\credential-defaults.jsp', 'admin\discovery.jsp', 'admin\acli-settings.jsp', 'admin\api.jsp', 'admin\config-backups.jsp', 'admin\feature-status.jsp', 'admin\system.jsp', 'admin\update.jsp', 'admin\update-channel.jsp', 'admin\offline-package.jsp',
+        'admin\webview-profiles.jsp', 'admin\credential-defaults.jsp', 'admin\discovery.jsp', 'admin\acli-settings.jsp', 'admin\api.jsp', 'admin\device-api.jsp', 'admin\session-settings.jsp', 'admin\config-backups.jsp', 'admin\feature-status.jsp', 'admin\system.jsp', 'admin\update.jsp', 'admin\update-channel.jsp', 'admin\offline-package.jsp',
         'assets\app-shell.js', 'assets\app-shell.css', 'assets\security.css', 'assets\setup-wizard.js',
         'assets\FabricNavigator_modern_transparent.png', 'assets\FabricNavigator_modern_light.png',
         'assets\switch-front-universal.svg', 'assets\switch-front-fabric.svg',
@@ -146,7 +153,10 @@ try {
     }
     # Keep every core update to one filesystem layer. Older packages emitted one
     # COPY layer per file and eventually exceeded overlayfs' lowerdir limit.
-    $dockerfile.Add('RUN --mount=type=bind,source=rootfs,target=/tmp/fabricnavigator-overlay,ro rm -rf /opt/fabricnavigator/snmp-src && cp -aL /tmp/fabricnavigator-overlay/etc/. /etc/ && cp -aL /tmp/fabricnavigator-overlay/opt/fabricnavigator/. /opt/fabricnavigator/ && cp -aL /tmp/fabricnavigator-overlay/opt/acli/. /opt/acli/ && cp -aL /tmp/fabricnavigator-overlay/opt/acli-web/. /opt/acli-web/ && cp -aL /tmp/fabricnavigator-overlay/opt/tomcat/. "$(readlink -f /opt/tomcat)/"')
+    $tomcatMigrationLayer = @'
+RUN --mount=type=bind,source=rootfs,target=/tmp/fabricnavigator-overlay,ro set -eu; if ! /opt/tomcat/bin/version.sh 2>/dev/null | grep -q 'Apache Tomcat/__TOMCAT_VERSION__'; then cp -aL /opt/tomcat/webapps/ROOT /tmp/fabricnavigator-root; tar -xzf /tmp/fabricnavigator-overlay/opt/fabricnavigator/runtime/apache-tomcat-__TOMCAT_VERSION__.tar.gz -C /opt; rm -rf /opt/apache-tomcat-__TOMCAT_VERSION__/webapps/*; cp -a /tmp/fabricnavigator-root /opt/apache-tomcat-__TOMCAT_VERSION__/webapps/ROOT; ecj_jar=$(find /opt/apache-tomcat-__TOMCAT_VERSION__/lib -maxdepth 1 -type f -name 'ecj-*.jar' | sort | tail -n 1); test -n "$ecj_jar"; ln -sf "$(basename "$ecj_jar")" /opt/apache-tomcat-__TOMCAT_VERSION__/lib/ecj-4.5.jar; sed -i 's/port="8080" protocol="HTTP\/1.1"/address="127.0.0.1" port="8081" protocol="HTTP\/1.1"/' /opt/apache-tomcat-__TOMCAT_VERSION__/conf/server.xml; sed -i 's/connectionTimeout="20000"/connectionTimeout="20000" maxPostSize="2097152" proxyPort="443" scheme="https" secure="true" allowTrace="false" server="FabricNavigator"/' /opt/apache-tomcat-__TOMCAT_VERSION__/conf/server.xml; install -d -o tomcat -g tomcat -m 0750 /opt/apache-tomcat-__TOMCAT_VERSION__/conf/Catalina/localhost; rm -f /opt/tomcat; ln -s /opt/apache-tomcat-__TOMCAT_VERSION__ /opt/tomcat; chmod -R a+rX /opt/apache-tomcat-__TOMCAT_VERSION__; chmod +x /opt/tomcat/bin/*.sh; rm -rf /tmp/fabricnavigator-root; fi; rm -rf /opt/fabricnavigator/snmp-src; cp -aL /tmp/fabricnavigator-overlay/etc/. /etc/; cp -aL /tmp/fabricnavigator-overlay/opt/fabricnavigator/. /opt/fabricnavigator/; rm -f /opt/fabricnavigator/runtime/apache-tomcat-__TOMCAT_VERSION__.tar.gz; cp -aL /tmp/fabricnavigator-overlay/opt/acli/. /opt/acli/; cp -aL /tmp/fabricnavigator-overlay/opt/acli-web/. /opt/acli-web/; cp -aL /tmp/fabricnavigator-overlay/opt/tomcat/. "$(readlink -f /opt/tomcat)/"
+'@.Replace('__TOMCAT_VERSION__', $tomcatVersion)
+    $dockerfile.Add($tomcatMigrationLayer)
     $dockerfile.Add('RUN rm -rf /opt/tomcat/webapps/edm /opt/tomcat/webapps/edm.war /opt/tomcat/webapps/ROOT/WEB-INF/classes/com && rm -f /opt/tomcat/lib/edm-security.jar /etc/nftables.d/edm-egress.nft /etc/systemd/system/edm-egress.service /etc/systemd/system/edm-egress.path /etc/systemd/system/multi-user.target.wants/edm-egress.path /opt/tomcat/webapps/ROOT/community-main.jsp /opt/tomcat/webapps/ROOT/device-main.jsp /opt/tomcat/webapps/ROOT/WEB-INF/lib/snmp4jdm-1.0.jar /opt/tomcat/webapps/ROOT/WEB-INF/classes/mib.dat && if [ -f /usr/local/sbin/refresh-edm-egress.py ]; then sed -i -e ''s/edm-egress/fabricnavigator-egress/g'' -e ''s/edm_egress/fabricnavigator_egress/g'' /usr/local/sbin/refresh-edm-egress.py && mv /usr/local/sbin/refresh-edm-egress.py /usr/local/sbin/refresh-fabricnavigator-egress.py; elif [ -f /usr/local/sbin/refresh-fabricnavigator-egress.py ]; then sed -i -e ''s/edm-egress/fabricnavigator-egress/g'' -e ''s/edm_egress/fabricnavigator_egress/g'' /usr/local/sbin/refresh-fabricnavigator-egress.py; fi && if [ -f /usr/local/bin/docker-entrypoint.sh ]; then sed -i ''s#refresh-edm-egress\.py#refresh-fabricnavigator-egress.py#g'' /usr/local/bin/docker-entrypoint.sh; fi && cp /opt/fabricnavigator/snmp4j-2.8.18.jar /opt/tomcat/webapps/ROOT/WEB-INF/lib/ && mkdir -p /tmp/fn-snmp-classes && /opt/java8/bin/java -cp /opt/tomcat/lib/ecj-4.5.jar org.eclipse.jdt.internal.compiler.batch.Main -1.8 -d /tmp/fn-snmp-classes -classpath /opt/fabricnavigator/snmp4j-2.8.18.jar:/opt/tomcat/lib/servlet-api.jar:/opt/tomcat/lib/fabricnavigator-security.jar /opt/fabricnavigator/snmp-src && cp -rf /tmp/fn-snmp-classes/com /opt/tomcat/webapps/ROOT/WEB-INF/classes/ && rm -rf /tmp/fn-snmp-classes')
     # Product photographs are distributed only through the optional external plugin.
     # Remove legacy copies inherited from an older base image so core releases remain redistributable.

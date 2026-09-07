@@ -1,0 +1,23 @@
+ARG BASE_IMAGE=fabricnavigator:2026-08-21
+FROM ${BASE_IMAGE}
+
+ARG TOMCAT_VERSION=9.0.121
+ARG TOMCAT_SHA512=16494dd4745f808d3c506807b5275521fd71044d976f441d18eeeab0f5a38bc1b5344ca395292f6f26eb7612cd8c8e746d01ccdfb29893d394052d9f4b1f4c11
+RUN set -eu; \
+    curl -fsSL "https://archive.apache.org/dist/tomcat/tomcat-9/v${TOMCAT_VERSION}/bin/apache-tomcat-${TOMCAT_VERSION}.tar.gz" -o /tmp/apache-tomcat.tar.gz; \
+    echo "${TOMCAT_SHA512}  /tmp/apache-tomcat.tar.gz" | sha512sum -c -; \
+    cp -aL /opt/tomcat/webapps/ROOT /tmp/fabricnavigator-root; \
+    tar -xzf /tmp/apache-tomcat.tar.gz -C /opt; \
+    rm -rf "/opt/apache-tomcat-${TOMCAT_VERSION}/webapps"/*; \
+    cp -a /tmp/fabricnavigator-root "/opt/apache-tomcat-${TOMCAT_VERSION}/webapps/ROOT"; \
+    ecj_jar="$(find "/opt/apache-tomcat-${TOMCAT_VERSION}/lib" -maxdepth 1 -type f -name 'ecj-*.jar' | sort | tail -n 1)"; \
+    test -n "$ecj_jar"; \
+    ln -s "$(basename "$ecj_jar")" "/opt/apache-tomcat-${TOMCAT_VERSION}/lib/ecj-4.5.jar"; \
+    sed -i 's/port="8080" protocol="HTTP\/1.1"/address="127.0.0.1" port="8081" protocol="HTTP\/1.1"/' "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/server.xml"; \
+    sed -i 's/connectionTimeout="20000"/connectionTimeout="20000" maxPostSize="2097152" proxyPort="443" scheme="https" secure="true" allowTrace="false" server="FabricNavigator"/' "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/server.xml"; \
+    rm -f /opt/tomcat; \
+    ln -s "/opt/apache-tomcat-${TOMCAT_VERSION}" /opt/tomcat; \
+    install -d -o tomcat -g tomcat -m 0750 "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/Catalina/localhost"; \
+    rm -rf /tmp/apache-tomcat.tar.gz /tmp/fabricnavigator-root; \
+    chmod -R a+rX "/opt/apache-tomcat-${TOMCAT_VERSION}"; \
+    chmod +x /opt/tomcat/bin/*.sh

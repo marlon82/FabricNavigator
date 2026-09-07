@@ -71,7 +71,12 @@ if [ -d /opt/fabricnavigator/snmp-src ]; then
   snmp_classes=/tmp/fabricnavigator-snmp-classes
   rm -rf "$snmp_classes"
   mkdir -p "$snmp_classes"
-  /opt/java8/bin/java -cp /opt/tomcat/lib/ecj-4.5.jar org.eclipse.jdt.internal.compiler.batch.Main \
+  ecj_jar="$(find /opt/tomcat/lib -maxdepth 1 -type f -name 'ecj-*.jar' | sort | tail -n 1)"
+  if [ -z "$ecj_jar" ]; then
+    echo "Tomcat ECJ compiler was not found" >&2
+    exit 1
+  fi
+  /opt/java8/bin/java -cp "$ecj_jar" org.eclipse.jdt.internal.compiler.batch.Main \
     -1.8 -encoding UTF-8 -d "$snmp_classes" -classpath /opt/fabricnavigator/snmp4j-2.8.18.jar:/opt/tomcat/lib/fabricnavigator-security.jar:/opt/tomcat/lib/servlet-api.jar \
     /opt/fabricnavigator/snmp-src
   if [ "$?" -ne 0 ]; then

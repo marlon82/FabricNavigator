@@ -3,6 +3,9 @@ package com.fabricnavigator.security;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 import java.util.Locale;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -16,6 +19,8 @@ import javax.servlet.http.HttpSession;
 
 /** Application authentication filter with an isolated bearer-token API path. */
 public final class AuthFilter implements Filter {
+    private static volatile long timeoutFileModified = -1L;
+    private static volatile int timeoutSeconds = 1800;
     public void init(FilterConfig ignored) {}
     public void destroy() {}
 
@@ -43,7 +48,17 @@ public final class AuthFilter implements Filter {
                 response.sendRedirect(requestBase(request) + "/setup.jsp");
                 return;
             }
-            EdmSecurity.User user = EdmSecurity.validateAuthToken(EdmSecurity.authToken(request));
+            String authToken = EdmSecurity.authToken(request);
+            EdmSecurity.User user = EdmSecurity.validateAuthToken(authToken);
+            HttpSession existingSession = request.getSession(false);
+            if (user != null && (existingSession == null ||
+                    !user.username.equals(existingSession.getAttribute("edm.auth.user")))) {
+                // The signed login cookie must not silently create a new session
+                // after Tomcat expired the inactive browser session.
+                EdmSecurity.destroyAuthToken(authToken);
+                EdmSecurity.clearAuthCookie(response);
+                user = null;
+            }
             if (isSetup(path)) {
                 response.sendRedirect(requestBase(request) + (user == null ? "/login.jsp" : "/"));
                 return;
@@ -65,14 +80,34 @@ public final class AuthFilter implements Filter {
                 return;
             }
             if (path.startsWith("/admin") && !"ADMIN".equals(user.role)) { response.sendError(403); return; }
-            HttpSession session = request.getSession(true);
-            session.setMaxInactiveInterval(1800);
+            HttpSession session = existingSession == null ? request.getSession(true) : existingSession;
+            session.setMaxInactiveInterval(configuredTimeoutSeconds());
             session.setAttribute("edm.auth.user", user.username);
             session.setAttribute("edm.auth.role", user.role);
             request.setAttribute("edm.auth.user", user);
             chain.doFilter(request, response);
         } catch (Exception error) {
             throw new ServletException("Authentication service unavailable", error);
+        }
+    }
+
+    private static int configuredTimeoutSeconds() {
+        File file = new File(System.getProperty("fabricnavigator.data.dir", "/opt/fabricnavigator/data"), "session.properties");
+        long modified = file.isFile() ? file.lastModified() : 0L;
+        if (modified == timeoutFileModified) return timeoutSeconds;
+        synchronized (AuthFilter.class) {
+            if (modified == timeoutFileModified) return timeoutSeconds;
+            int minutes = 30;
+            if (file.isFile()) {
+                Properties values = new Properties();
+                try (FileInputStream input = new FileInputStream(file)) {
+                    values.load(input);
+                    minutes = Integer.parseInt(values.getProperty("timeoutMinutes", "30").trim());
+                } catch (Exception ignored) { minutes = 30; }
+            }
+            timeoutSeconds = Math.max(5, Math.min(1440, minutes)) * 60;
+            timeoutFileModified = modified;
+            return timeoutSeconds;
         }
     }
 

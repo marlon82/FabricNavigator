@@ -36,6 +36,8 @@ public final class TopologyDiscoveryV7 {
     private static final int[] ISIS_CIRC_IF_INDEX_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 3, 2, 1, 2};
     private static final int[] ISIS_ADJ_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 6, 1, 1, 2};
     private static final int[] RC_ISIS_ADJ_IF_INDEX_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 63, 10, 1, 4};
+    private static final int[] ISIS_MAN_AREA_EXIST_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 1, 2, 1, 2};
+    private static final int[] ISIS_LEARNED_AREA_EXIST_STATE_OID = new int[]{1, 3, 6, 1, 2, 1, 138, 1, 1, 3, 1, 2};
     private static final int[] IF_NAME_OID = new int[]{1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 1};
     private static final int[] IF_DESCR_OID = new int[]{1, 3, 6, 1, 2, 1, 2, 2, 1, 2};
     private static final int[] VIRTUAL_IST_STATUS_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 1, 0};
@@ -101,6 +103,7 @@ public final class TopologyDiscoveryV7 {
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
                     if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr)) {
                         TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
+                        TopologyDiscoveryV7.readSpbmAreas(snmpUtilV3, node);
                     }
                     Map<String, String> map = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemSysName");
                     Map<String, String> map2 = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemPortId");
@@ -294,6 +297,56 @@ public final class TopologyDiscoveryV7 {
         catch (Exception ignored) {
             // Virtual IST is optional and is not available on every Fabric Engine release.
         }
+    }
+
+    private static void readSpbmAreas(SnmpUtilV3 snmpUtilV3, Node node) {
+        try {
+            Map<Integer, LinkedHashSet<String>> byInstance = new LinkedHashMap<Integer, LinkedHashSet<String>>();
+            collectAreas(snmpUtilV3, ISIS_MAN_AREA_EXIST_STATE_OID, byInstance);
+            if (byInstance.isEmpty()) collectAreas(snmpUtilV3, ISIS_LEARNED_AREA_EXIST_STATE_OID, byInstance);
+            if (byInstance.isEmpty()) return;
+            List<Integer> instances = new ArrayList<Integer>(byInstance.keySet());
+            Collections.sort(instances);
+            LinkedHashSet<String> home = byInstance.get(instances.get(0));
+            if (home != null && !home.isEmpty()) node.spbmHomeArea = home.iterator().next();
+            for (int i = 1; i < instances.size(); i++) {
+                LinkedHashSet<String> areas = byInstance.get(instances.get(i));
+                if (areas != null) node.spbmRemoteAreas.addAll(areas);
+            }
+        } catch (Exception ignored) {
+            // IS-IS area data is optional and older firmware may not expose RFC 4444.
+        }
+    }
+
+    private static void collectAreas(SnmpUtilV3 snmp, int[] oid, Map<Integer, LinkedHashSet<String>> target) throws Exception {
+        for (WalkEntry entry : TopologyDiscoveryV7.walkOid(snmp, oid)) {
+            if (entry.suffix.length < 3 || !isisAreaRowActive(entry.value)) continue;
+            int instance = entry.suffix[0], length = entry.suffix[1];
+            if (instance <= 0 || length <= 0 || entry.suffix.length < length + 2) continue;
+            String area = formatArea(entry.suffix, 2, length);
+            if (area.length() == 0) continue;
+            LinkedHashSet<String> values = target.get(instance);
+            if (values == null) { values = new LinkedHashSet<String>(); target.put(instance, values); }
+            values.add(area);
+        }
+    }
+
+    private static boolean isisAreaRowActive(String value) {
+        String normalized = clean(value);
+        return normalized.length() == 0 || "1".equals(normalized) || "active".equalsIgnoreCase(normalized);
+    }
+
+    private static String formatArea(int[] suffix, int offset, int length) {
+        StringBuilder hex = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int value = suffix[offset + i] & 255;
+            if (value < 16) hex.append('0');
+            hex.append(Integer.toHexString(value).toUpperCase(Locale.ENGLISH));
+        }
+        if (hex.length() <= 2) return hex.toString();
+        StringBuilder formatted = new StringBuilder(hex.substring(0, 2));
+        for (int i = 2; i < hex.length(); i += 4) formatted.append('.').append(hex.substring(i, Math.min(i + 4, hex.length())));
+        return formatted.toString();
     }
 
     private static Map<Integer, String> localPortMap(SnmpUtilV3 snmpUtilV3) throws Exception {
@@ -617,6 +670,8 @@ public final class TopologyDiscoveryV7 {
         public boolean vistActive;
         public String vistPeer = "";
         public int vistVlan;
+        public String spbmHomeArea = "";
+        public final List<String> spbmRemoteAreas = new ArrayList<String>();
         public int depth;
     }
 

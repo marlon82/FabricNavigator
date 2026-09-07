@@ -1,4 +1,10 @@
-# FabricNavigator 26.09.10.282
+# FabricNavigator 26.09.10.283
+
+## Changes
+
+- Upgraded the web runtime from unsupported Tomcat 8.0.36 to Apache Tomcat 9.0.121 while retaining Java EE compatibility.
+- Added a General administration section for the device API preference and configurable web-session timeout.
+- Added SPBM home/remote area discovery and optional shared area frames for multi-area topologies.
 
 - Added consistent spacing between the Profile navigation and the SSH toolbar panel.
 - Removed empty lines and reduced vertical spacing in configuration diffs.

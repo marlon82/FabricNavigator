@@ -1,6 +1,12 @@
 services:
   fabricnavigator:
-    image: fabricnavigator:2026-08-21
+    build:
+      context: .
+      dockerfile: Dockerfile.tomcat9
+      args:
+        BASE_IMAGE: fabricnavigator:2026-08-21
+        TOMCAT_VERSION: 9.0.121
+    image: fabricnavigator:26.09.10.283
     container_name: fabricnavigator
     entrypoint: ["/bin/sh", "/opt/fabricnavigator/fabricnavigator-entrypoint.sh"]
     restart: unless-stopped
@@ -8,7 +14,7 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.282"
+      FABRICNAVIGATOR_VERSION: "26.09.10.283"
       FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD:-CONFIGBACKUP}"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
       FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
@@ -68,6 +74,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/acli-settings.jsp:/opt/tomcat/webapps/ROOT/admin/acli-settings.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/api.jsp:/opt/tomcat/webapps/ROOT/admin/api.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/device-api.jsp:/opt/tomcat/webapps/ROOT/admin/device-api.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/session-settings.jsp:/opt/tomcat/webapps/ROOT/admin/session-settings.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/config-backups.jsp:/opt/tomcat/webapps/ROOT/admin/config-backups.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/admin/feature-status.jsp:/opt/tomcat/webapps/ROOT/admin/feature-status.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/api-sessions.jsp:/opt/tomcat/webapps/ROOT/api-sessions.jsp:ro
