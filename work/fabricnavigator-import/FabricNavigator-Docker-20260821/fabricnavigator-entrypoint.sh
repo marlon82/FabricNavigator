@@ -17,6 +17,7 @@ ACLI_CONFIG="$DATA_DIR/acli.ini"
 ACLI_LOG_DIR="$DATA_DIR/acli-logs"
 API_DATA_DIR="$DATA_DIR/api"
 CONFIG_BACKUP_DIR="$DATA_DIR/config-backups"
+TERMINAL_RUN_DIR="${FABRICNAVIGATOR_TERMINAL_RUN_DIR:-/opt/tomcat/run/edm-terminal}"
 mkdir -p "$UPDATE_DIR"
 # The directory contains only update requests and public release metadata. It
 # must be writable by Tomcat and readable by the separate Windows host updater.
@@ -28,6 +29,7 @@ mkdir -p "$DATA_DIR"
 mkdir -p "$ACLI_LOG_DIR"
 mkdir -p "$API_DATA_DIR"
 mkdir -p "$CONFIG_BACKUP_DIR"
+mkdir -p "$TERMINAL_RUN_DIR"
 if [ ! -f "$ACLI_CONFIG" ]; then
   cp /opt/acli-web/acli-default.ini "$ACLI_CONFIG"
 fi
@@ -45,6 +47,9 @@ chown -R tomcat:tomcat "$API_DATA_DIR" 2>/dev/null || true
 chmod 0700 "$API_DATA_DIR" 2>/dev/null || true
 chown -R tomcat:tomcat "$CONFIG_BACKUP_DIR" 2>/dev/null || true
 chmod 0700 "$CONFIG_BACKUP_DIR" 2>/dev/null || true
+chown -R tomcat:tomcat "$(dirname "$TERMINAL_RUN_DIR")" 2>/dev/null || true
+chmod 0750 "$(dirname "$TERMINAL_RUN_DIR")" 2>/dev/null || true
+chmod 0700 "$TERMINAL_RUN_DIR" 2>/dev/null || true
 if [ -f "$API_DATA_DIR/fabricnavigator-api.properties" ]; then
   chmod 0600 "$API_DATA_DIR/fabricnavigator-api.properties" 2>/dev/null || true
 fi
