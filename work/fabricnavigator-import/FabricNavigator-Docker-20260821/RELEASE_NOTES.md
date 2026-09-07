@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.286
+# FabricNavigator 26.09.10.287
+
+- Renders demo device images synchronously and applies SPBM area separation after node collision resolution so area frames remain disjoint.
 
 - Prevents SPBM area frames from overlapping by separating complete area groups after automatic layout.
 
