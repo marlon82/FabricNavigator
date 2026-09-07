@@ -44,7 +44,7 @@ public final class TopologyDiscoveryV7 {
     private static final int[] VIRTUAL_IST_PEER_IP_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 2, 0};
     private static final int[] VIRTUAL_IST_VLAN_ID_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 3, 0};
     private static final int[] IP_AD_ENT_ADDR_OID = new int[]{1, 3, 6, 1, 2, 1, 4, 20, 1, 1};
-    private static final String DISCOVERY_SETTINGS = "/opt/tomcat/conf/edm-security/discovery.properties";
+    private static final String DISCOVERY_SETTINGS = System.getProperty("edm.security.dir", "/opt/fabricnavigator/data") + "/discovery.properties";
 
     private static int configuredInt(String string, int n, int n2, int n3) {
         Properties properties = new Properties();
@@ -57,6 +57,20 @@ public final class TopologyDiscoveryV7 {
         }
         catch (Exception exception) {
             return n;
+        }
+    }
+
+    private static boolean configuredBoolean(String name, boolean fallback) {
+        Properties properties = new Properties();
+        try {
+            try (FileInputStream input = new FileInputStream(DISCOVERY_SETTINGS)) {
+                properties.load(input);
+            }
+            String value = properties.getProperty(name);
+            return value == null ? fallback : Boolean.parseBoolean(value.trim());
+        }
+        catch (Exception ignored) {
+            return fallback;
         }
     }
 
@@ -73,6 +87,8 @@ public final class TopologyDiscoveryV7 {
         long l = System.currentTimeMillis();
         long l2 = l + 120000L;
         Result result = new Result();
+        result.debugEnabled = TopologyDiscoveryV7.configuredBoolean("debugEnabled", false);
+        result.addDebug("discovery event=start seed=" + string + " timeoutMs=" + TopologyDiscoveryV7.configuredInt("snmpTimeoutMs", 2500, 500, 30000) + " retries=" + TopologyDiscoveryV7.configuredInt("snmpRetries", 0, 0, 5) + " credentialProfiles=" + list.size());
         LinkedHashMap<String, Node> linkedHashMap = new LinkedHashMap<String, Node>();
         LinkedHashMap<String, Link> linkedHashMap2 = new LinkedHashMap<String, Link>();
         HashSet<String> hashSet = new HashSet<String>();
@@ -82,6 +98,7 @@ public final class TopologyDiscoveryV7 {
             SessionMatch sessionMatch;
             QueueItem queueItem = (QueueItem)arrayDeque.removeFirst();
             if (!hashSet.add(queueItem.ip)) continue;
+            result.addDebug("device host=" + queueItem.ip + " depth=" + queueItem.depth + " event=probe-start queueRemaining=" + arrayDeque.size());
             Node node = (Node)linkedHashMap.get(queueItem.ip);
             if (node == null) {
                 node = new Node();
@@ -91,8 +108,9 @@ public final class TopologyDiscoveryV7 {
                 node.depth = queueItem.depth;
                 linkedHashMap.put(node.id, node);
             }
-            if ((sessionMatch = this.connect(queueItem.ip, list, l2)) == null) {
+            if ((sessionMatch = this.connect(queueItem.ip, list, l2, result)) == null) {
                 node.status = "unreachable";
+                result.addDebug("device host=" + queueItem.ip + " event=probe-finished status=unreachable");
                 continue;
             }
             SnmpUtilV3 snmpUtilV3 = sessionMatch.snmp;
@@ -102,12 +120,14 @@ public final class TopologyDiscoveryV7 {
                     node.name = TopologyDiscoveryV7.clean(sessionMatch.name).length() == 0 ? queueItem.ip : TopologyDiscoveryV7.clean(sessionMatch.name);
                     node.sysDescr = TopologyDiscoveryV7.clean(sessionMatch.sysDescr);
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
+                    result.addDebug("device host=" + queueItem.ip + " event=identified name=\"" + node.name + "\" sysObjectId=\"" + TopologyDiscoveryV7.clean(sessionMatch.sysObjectId) + "\" fabricEngine=" + (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)));
                     if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)) {
                         TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
                         if (node.vistActive) {
                             TopologyDiscoveryV7.readLocalIpv4Addresses(snmpUtilV3, node);
                         }
                         TopologyDiscoveryV7.readSpbmAreas(snmpUtilV3, node);
+                        result.addDebug("device host=" + queueItem.ip + " event=fabric-capabilities vistActive=" + node.vistActive + " homeArea=\"" + node.spbmHomeArea + "\" remoteAreas=" + node.spbmRemoteAreas.size());
                     }
                     Map<String, String> map = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemSysName");
                     Map<String, String> map2 = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemPortId");
@@ -120,6 +140,7 @@ public final class TopologyDiscoveryV7 {
                     Set<Integer> set4 = TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) ? TopologyDiscoveryV7.fabricAttachInterfaces(snmpUtilV3) : Collections.emptySet();
                     Set<String> set5 = TopologyDiscoveryV7.interfaceNames(snmpUtilV3, set4);
                     Map<String, String> map6 = TopologyDiscoveryV7.managementAddressMap(snmpUtilV3);
+                    result.addDebug("device host=" + queueItem.ip + " event=lldp-read names=" + map.size() + " portIds=" + map2.size() + " portDescriptions=" + map3.size() + " chassisIds=" + map4.size() + " managementAddresses=" + map6.size() + " localPorts=" + map5.size() + " poePorts=" + set.size() + " isisInterfaces=" + set2.size() + " fabricAttachInterfaces=" + set4.size());
                     LinkedHashSet<String> linkedHashSet = new LinkedHashSet<String>();
                     linkedHashSet.addAll(map.keySet());
                     linkedHashSet.addAll(map2.keySet());
@@ -156,6 +177,7 @@ public final class TopologyDiscoveryV7 {
                         Link link2 = (Link)linkedHashMap2.get(string9);
                         if (link2 == null) {
                             linkedHashMap2.put(string9, link);
+                            result.addDebug("link event=added source=" + link.source + " sourcePort=\"" + link.sourcePort + "\" target=" + link.target + " targetPort=\"" + link.targetPort + "\" isis=" + link.isis + " fabricAttach=" + link.fabricAttach + " poe=" + link.poe);
                         } else {
                             link2.poe = link2.poe || link.poe;
                             link2.isis = link2.isis || link.isis;
@@ -168,6 +190,7 @@ public final class TopologyDiscoveryV7 {
                 catch (Exception exception) {
                     node.status = "partial";
                     result.warnings.add("LLDP-Daten f\u00fcr " + queueItem.ip + " konnten nicht vollst\u00e4ndig gelesen werden.");
+                    result.addDebug("device host=" + queueItem.ip + " event=read-failed error=" + exception.getClass().getSimpleName());
                     try {
                         snmpUtilV3.closeSession();
                     }
@@ -194,16 +217,22 @@ public final class TopologyDiscoveryV7 {
         result.nodes.addAll(linkedHashMap.values());
         result.links.addAll(linkedHashMap2.values());
         result.elapsedMs = System.currentTimeMillis() - l;
+        result.addDebug("discovery event=finished nodes=" + result.nodes.size() + " links=" + result.links.size() + " elapsedMs=" + result.elapsedMs);
         return result;
     }
 
     private SessionMatch connect(String string, List<Credential> list, long l) {
+        return this.connect(string, list, l, new Result());
+    }
+
+    private SessionMatch connect(String string, List<Credential> list, long l, Result result) {
         int n = TopologyDiscoveryV7.configuredInt("snmpTimeoutMs", 2500, 500, 30000);
         int n2 = TopologyDiscoveryV7.configuredInt("snmpRetries", 0, 0, 5);
         for (Credential credential : list) {
             int n3 = 0;
             while (n3 <= n2) {
                 if (System.currentTimeMillis() >= l) {
+                    result.addDebug("snmp host=" + string + " decision=deadline-reached");
                     return null;
                 }
                 SnmpUtilV3 snmpUtilV3 = new SnmpUtilV3();
@@ -234,10 +263,13 @@ public final class TopologyDiscoveryV7 {
                         sessionMatch.name = stringArray[0];
                         sessionMatch.sysDescr = stringArray.length > 1 ? stringArray[1] : "";
                         sessionMatch.sysObjectId = stringArray.length > 2 ? stringArray[2] : "";
+                        result.addDebug("snmp host=" + string + " version=" + TopologyDiscoveryV7.safeCredentialLabel(credential) + " attempt=" + (n3 + 1) + " decision=accepted sysObjectId=\"" + TopologyDiscoveryV7.clean(sessionMatch.sysObjectId) + "\"");
                         return sessionMatch;
                     }
                 }
-                catch (Exception exception) {}
+                catch (Exception exception) {
+                    result.addDebug("snmp host=" + string + " version=" + TopologyDiscoveryV7.safeCredentialLabel(credential) + " attempt=" + (n3 + 1) + " decision=failed error=" + exception.getClass().getSimpleName());
+                }
                 try {
                     snmpUtilV3.closeSession();
                 }
@@ -245,6 +277,7 @@ public final class TopologyDiscoveryV7 {
                 ++n3;
             }
         }
+        result.addDebug("snmp host=" + string + " decision=no-profile-responded");
         return null;
     }
 
@@ -285,16 +318,24 @@ public final class TopologyDiscoveryV7 {
 
     private static void readVirtualIst(SnmpUtilV3 snmpUtilV3, Node node) {
         try {
-            int status = integerValue(scalarValue(snmpUtilV3, VIRTUAL_IST_STATUS_OID));
-            String peer = clean(scalarValue(snmpUtilV3, VIRTUAL_IST_PEER_IP_OID));
-            int vlan = integerValue(scalarValue(snmpUtilV3, VIRTUAL_IST_VLAN_ID_OID));
+            String rawStatus = scalarValue(snmpUtilV3, VIRTUAL_IST_STATUS_OID);
+            String rawPeer = scalarValue(snmpUtilV3, VIRTUAL_IST_PEER_IP_OID);
+            String rawVlan = scalarValue(snmpUtilV3, VIRTUAL_IST_VLAN_ID_OID);
+            int status = integerValue(rawStatus);
+            String peer = clean(rawPeer);
+            int vlan = integerValue(rawVlan);
+            node.vistDebug = "statusRaw=\"" + clean(rawStatus) + "\" peerRaw=\"" + clean(rawPeer) + "\" vlanRaw=\"" + clean(rawVlan) + "\"";
             if (status == 1 && isAllowedAddress(peer) && !peer.equals(node.ip)) {
                 node.vistActive = true;
                 node.vistPeer = peer;
                 node.vistVlan = Math.max(0, vlan);
+                node.vistDecision = "active-awaiting-peer-resolution";
+            } else {
+                node.vistDecision = "inactive-or-invalid-values";
             }
         }
-        catch (Exception ignored) {
+        catch (Exception error) {
+            node.vistDecision = "read-failed-" + error.getClass().getSimpleName();
             // Virtual IST is optional and is not available on every Fabric Engine release.
         }
     }
@@ -331,6 +372,7 @@ public final class TopologyDiscoveryV7 {
             Node peer = byAddress.get(node.vistPeer);
             if (peer != null && peer != node && peer.vistActive && compatibleVistVlan(node, peer)) {
                 node.vistPeerNodeId = peer.id;
+                node.vistDecision = "resolved-by-interface-address";
             }
         }
 
@@ -357,7 +399,12 @@ public final class TopologyDiscoveryV7 {
             if (first != second && compatibleVistVlan(first, second)) {
                 first.vistPeerNodeId = second.id;
                 second.vistPeerNodeId = first.id;
+                first.vistDecision = "resolved-by-vist-network";
+                second.vistDecision = "resolved-by-vist-network";
             }
+        }
+        for (Node node : active) {
+            if (node.vistPeerNodeId.length() == 0) node.vistDecision = "active-peer-not-resolved";
         }
     }
 
@@ -768,6 +815,8 @@ public final class TopologyDiscoveryV7 {
         public String vistPeer = "";
         public String vistPeerNodeId = "";
         public int vistVlan;
+        public String vistDebug = "";
+        public String vistDecision = "not-queried";
         public final List<String> interfaceIpv4Addresses = new ArrayList<String>();
         public String spbmHomeArea = "";
         public final List<String> spbmRemoteAreas = new ArrayList<String>();
@@ -788,7 +837,13 @@ public final class TopologyDiscoveryV7 {
         public final List<Node> nodes = new ArrayList<Node>();
         public final List<Link> links = new ArrayList<Link>();
         public final List<String> warnings = new ArrayList<String>();
+        public final List<String> debug = new ArrayList<String>();
+        public boolean debugEnabled;
         public long elapsedMs;
+
+        public void addDebug(String detail) {
+            if (debugEnabled && detail != null && debug.size() < 10000) debug.add(detail);
+        }
     }
 
     private static final class SessionMatch {
