@@ -135,7 +135,7 @@ try {
         'assets\app-shell.js', 'assets\app-shell.css', 'assets\security.css', 'assets\setup-wizard.js',
         'assets\FabricNavigator_modern_transparent.png', 'assets\FabricNavigator_modern_light.png',
         'assets\switch-front-universal.svg', 'assets\switch-front-fabric.svg',
-        'assets\switch-front-switchengine.svg', 'assets\generic-phone.png',
+        'assets\switch-front-switchengine.svg', 'assets\switch-front-ers.svg', 'assets\generic-phone.png',
         'assets\generic-switch.png', 'assets\generic-wlan-ap.png', 'assets\generic-firewall.png',
         'assets\topology-group.svg', 'assets\service-ui.js', 'assets\service-ui.css', 'assets\config-backup-topology.js', 'assets\system-features.js', 'assets\update-channel.js', 'assets\offline-packages.js', 'assets\user-profile.js', 'assets\user-profile.css'
     )) {
