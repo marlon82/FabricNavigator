@@ -6,7 +6,7 @@ services:
       args:
         BASE_IMAGE: fabricnavigator:2026-08-21
         TOMCAT_VERSION: 9.0.121
-    image: fabricnavigator:26.09.10.287
+    image: fabricnavigator:26.09.10.288
     container_name: fabricnavigator
     entrypoint: ["/bin/sh", "/opt/fabricnavigator/fabricnavigator-entrypoint.sh"]
     restart: unless-stopped
@@ -14,7 +14,7 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.287"
+      FABRICNAVIGATOR_VERSION: "26.09.10.288"
       FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD:-CONFIGBACKUP}"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
       FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"

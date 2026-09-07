@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.287
+# FabricNavigator 26.09.10.288
+
+- Shows SPBM home and remote area details only for nodes carrying both values and only when the topology contains multiple distinct areas.
 
 - Renders demo device images synchronously and applies SPBM area separation after node collision resolution so area frames remain disjoint.
 
