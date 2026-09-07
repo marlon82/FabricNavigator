@@ -1,4 +1,6 @@
-# FabricNavigator 26.09.10.288
+# FabricNavigator 26.09.10.289
+
+- Keeps the Actions toolbox docked below the complete expanded Topology tools panel and removes legacy node circles from the demo topology.
 
 - Shows SPBM home and remote area details only for nodes carrying both values and only when the topology contains multiple distinct areas.
 
