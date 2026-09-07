@@ -43,6 +43,7 @@ public final class TopologyDiscoveryV7 {
     private static final int[] VIRTUAL_IST_STATUS_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 1, 0};
     private static final int[] VIRTUAL_IST_PEER_IP_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 2, 0};
     private static final int[] VIRTUAL_IST_VLAN_ID_OID = new int[]{1, 3, 6, 1, 4, 1, 2272, 1, 211, 3, 0};
+    private static final int[] IP_AD_ENT_ADDR_OID = new int[]{1, 3, 6, 1, 2, 1, 4, 20, 1, 1};
     private static final String DISCOVERY_SETTINGS = "/opt/tomcat/conf/edm-security/discovery.properties";
 
     private static int configuredInt(String string, int n, int n2, int n3) {
@@ -103,6 +104,9 @@ public final class TopologyDiscoveryV7 {
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
                     if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)) {
                         TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
+                        if (node.vistActive) {
+                            TopologyDiscoveryV7.readLocalIpv4Addresses(snmpUtilV3, node);
+                        }
                         TopologyDiscoveryV7.readSpbmAreas(snmpUtilV3, node);
                     }
                     Map<String, String> map = TopologyDiscoveryV7.walkMap(snmpUtilV3, "lldpRemSysName");
@@ -186,6 +190,7 @@ public final class TopologyDiscoveryV7 {
         if (!arrayDeque.isEmpty()) {
             result.warnings.add("Discovery-Limit erreicht; Ergebnis ist m\u00f6glicherweise unvollst\u00e4ndig.");
         }
+        TopologyDiscoveryV7.resolveVirtualIstPeers(linkedHashMap.values());
         result.nodes.addAll(linkedHashMap.values());
         result.links.addAll(linkedHashMap2.values());
         result.elapsedMs = System.currentTimeMillis() - l;
@@ -292,6 +297,79 @@ public final class TopologyDiscoveryV7 {
         catch (Exception ignored) {
             // Virtual IST is optional and is not available on every Fabric Engine release.
         }
+    }
+
+    private static void readLocalIpv4Addresses(SnmpUtilV3 snmpUtilV3, Node node) {
+        try {
+            for (WalkEntry entry : TopologyDiscoveryV7.walkOid(snmpUtilV3, IP_AD_ENT_ADDR_OID)) {
+                String address = TopologyDiscoveryV7.clean(entry.value);
+                if (TopologyDiscoveryV7.isAllowedAddress(address) && !node.interfaceIpv4Addresses.contains(address)) {
+                    node.interfaceIpv4Addresses.add(address);
+                }
+            }
+        }
+        catch (Exception ignored) {
+            // ipAddrTable is optional on newer agents. The /30 fallback below
+            // still resolves the common Fabric Engine vIST address layout.
+        }
+        if (TopologyDiscoveryV7.isAllowedAddress(node.ip) && !node.interfaceIpv4Addresses.contains(node.ip)) {
+            node.interfaceIpv4Addresses.add(node.ip);
+        }
+    }
+
+    private static void resolveVirtualIstPeers(Iterable<Node> nodes) {
+        LinkedHashMap<String, Node> byAddress = new LinkedHashMap<String, Node>();
+        ArrayList<Node> active = new ArrayList<Node>();
+        for (Node node : nodes) {
+            if (TopologyDiscoveryV7.isAllowedAddress(node.ip)) byAddress.put(node.ip, node);
+            for (String address : node.interfaceIpv4Addresses) {
+                if (TopologyDiscoveryV7.isAllowedAddress(address)) byAddress.put(address, node);
+            }
+            if (node.vistActive && TopologyDiscoveryV7.isAllowedAddress(node.vistPeer)) active.add(node);
+        }
+        for (Node node : active) {
+            Node peer = byAddress.get(node.vistPeer);
+            if (peer != null && peer != node && peer.vistActive && compatibleVistVlan(node, peer)) {
+                node.vistPeerNodeId = peer.id;
+            }
+        }
+
+        // Fabric Engine commonly uses the two usable addresses of a dedicated
+        // /30 for vIST. This fallback is needed when the agent does not expose
+        // that VLAN through the legacy ipAddrTable.
+        LinkedHashMap<String, List<Node>> byVistNetwork = new LinkedHashMap<String, List<Node>>();
+        for (Node node : active) {
+            if (node.vistPeerNodeId.length() > 0) continue;
+            long address = TopologyDiscoveryV7.ipv4Number(node.vistPeer);
+            if (address < 0) continue;
+            String key = node.vistVlan + ":" + (address & 0xfffffffcL);
+            List<Node> members = byVistNetwork.get(key);
+            if (members == null) {
+                members = new ArrayList<Node>();
+                byVistNetwork.put(key, members);
+            }
+            members.add(node);
+        }
+        for (List<Node> members : byVistNetwork.values()) {
+            if (members.size() != 2) continue;
+            Node first = members.get(0);
+            Node second = members.get(1);
+            if (first != second && compatibleVistVlan(first, second)) {
+                first.vistPeerNodeId = second.id;
+                second.vistPeerNodeId = first.id;
+            }
+        }
+    }
+
+    private static boolean compatibleVistVlan(Node first, Node second) {
+        return first.vistVlan <= 0 || second.vistVlan <= 0 || first.vistVlan == second.vistVlan;
+    }
+
+    private static long ipv4Number(String address) {
+        if (!TopologyDiscoveryV7.isAllowedAddress(address)) return -1L;
+        long value = 0L;
+        for (String part : address.split("\\.")) value = value << 8 | Long.parseLong(part);
+        return value;
     }
 
     private static String scalarValue(SnmpUtilV3 snmpUtilV3, int[] oid) {
@@ -688,7 +766,9 @@ public final class TopologyDiscoveryV7 {
         public String credential = "";
         public boolean vistActive;
         public String vistPeer = "";
+        public String vistPeerNodeId = "";
         public int vistVlan;
+        public final List<String> interfaceIpv4Addresses = new ArrayList<String>();
         public String spbmHomeArea = "";
         public final List<String> spbmRemoteAreas = new ArrayList<String>();
         public int depth;
