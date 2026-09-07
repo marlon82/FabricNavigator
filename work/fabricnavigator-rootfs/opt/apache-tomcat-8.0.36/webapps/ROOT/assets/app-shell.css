@@ -608,6 +608,7 @@ body.fn-topology-page .fn-build-number{top:auto!important;right:14px!important;b
 .fn-topology-page #topology-graph .node.fn-demo-node-image>circle{display:none!important}
 .fn-node-hover-vist-row{margin-top:5px;padding-top:7px;border-top:1px solid color-mix(in srgb,var(--fn-accent) 28%,var(--fn-border))}
 .fn-node-hover-vist-row[hidden]{display:none!important}
+.fn-node-hover-spbm-home[hidden],.fn-node-hover-spbm-remote[hidden]{display:none!important}
 .fn-node-hover-vist-row dt{color:var(--fn-accent)!important;font-weight:900!important}
 
 /* Embedded WebView credentials use the same visual surface as SNMP and SSH. */

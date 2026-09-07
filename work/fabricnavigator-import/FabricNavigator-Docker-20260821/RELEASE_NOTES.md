@@ -1,3 +1,9 @@
+# FabricNavigator 26.09.10.293
+
+- Hides SPBM home/remote area rows completely unless a FabricEngine/VSP/VOSS node belongs to a real multi-area topology and has both values.
+- Prevents SwitchEngine and EXOS devices from ever showing SPBM area details, including stale saved-topology data.
+- Prevents topology device images from being repeatedly overwritten by older rendering passes, eliminating continuous icon flicker for FortiGate, EXOS, FabricEngine, and product-image nodes.
+
 # FabricNavigator 26.09.10.292
 
 - Correctly reads Fabric Engine SPBM home-area addresses from the default SNMP context and remote-area addresses from the `isisRemoteArea` SNMPv3 context, including RFC 4444 table-index decoding.
