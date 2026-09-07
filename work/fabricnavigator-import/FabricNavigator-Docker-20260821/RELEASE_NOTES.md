@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.296
+
+- Enables SSH actions for assigned SwitchEngine/EXOS devices instead of limiting them to Fabric Engine switches.
+- Refreshes SSH capability from current server-side device assignments when loading a saved topology, so credentials assigned after discovery take effect without rediscovery.
+
 # FabricNavigator 26.09.10.295
 
 - Makes vIST discovery tolerant of partially implemented scalar responses and identifies Fabric Engine devices through the Rapid-City enterprise OID in addition to `sysDescr`.
