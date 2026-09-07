@@ -101,7 +101,7 @@ public final class TopologyDiscoveryV7 {
                     node.name = TopologyDiscoveryV7.clean(sessionMatch.name).length() == 0 ? queueItem.ip : TopologyDiscoveryV7.clean(sessionMatch.name);
                     node.sysDescr = TopologyDiscoveryV7.clean(sessionMatch.sysDescr);
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
-                    if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr)) {
+                    if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)) {
                         TopologyDiscoveryV7.readVirtualIst(snmpUtilV3, node);
                         TopologyDiscoveryV7.readSpbmAreas(snmpUtilV3, node);
                     }
@@ -221,13 +221,14 @@ public final class TopologyDiscoveryV7 {
                         snmpUtilV3.openSession(string, credential.community, credential.community);
                         snmpUtilV3.setTimeout(n);
                     }
-                    String[] stringArray = snmpUtilV3.getAttribute(new String[]{"sysName.0", "sysDescr.0"}, false);
+                    String[] stringArray = snmpUtilV3.getAttribute(new String[]{"sysName.0", "sysDescr.0", "sysObjectID.0"}, false);
                     if (stringArray != null && stringArray.length >= 1 && TopologyDiscoveryV7.clean(stringArray[0]).length() > 0) {
                         SessionMatch sessionMatch = new SessionMatch();
                         sessionMatch.snmp = snmpUtilV3;
                         sessionMatch.credential = credential;
                         sessionMatch.name = stringArray[0];
                         sessionMatch.sysDescr = stringArray.length > 1 ? stringArray[1] : "";
+                        sessionMatch.sysObjectId = stringArray.length > 2 ? stringArray[2] : "";
                         return sessionMatch;
                     }
                 }
@@ -279,15 +280,9 @@ public final class TopologyDiscoveryV7 {
 
     private static void readVirtualIst(SnmpUtilV3 snmpUtilV3, Node node) {
         try {
-            List<SnmpOID> oids = new ArrayList<SnmpOID>();
-            oids.add(new SnmpOID(VIRTUAL_IST_STATUS_OID));
-            oids.add(new SnmpOID(VIRTUAL_IST_PEER_IP_OID));
-            oids.add(new SnmpOID(VIRTUAL_IST_VLAN_ID_OID));
-            List<SnmpVarBind> values = snmpUtilV3.snmpGet(oids);
-            if (values == null || values.size() < 3) return;
-            int status = integerValue(values.get(0).getVar().toString());
-            String peer = clean(values.get(1).getVar().toString());
-            int vlan = integerValue(values.get(2).getVar().toString());
+            int status = integerValue(scalarValue(snmpUtilV3, VIRTUAL_IST_STATUS_OID));
+            String peer = clean(scalarValue(snmpUtilV3, VIRTUAL_IST_PEER_IP_OID));
+            int vlan = integerValue(scalarValue(snmpUtilV3, VIRTUAL_IST_VLAN_ID_OID));
             if (status == 1 && isAllowedAddress(peer) && !peer.equals(node.ip)) {
                 node.vistActive = true;
                 node.vistPeer = peer;
@@ -296,6 +291,20 @@ public final class TopologyDiscoveryV7 {
         }
         catch (Exception ignored) {
             // Virtual IST is optional and is not available on every Fabric Engine release.
+        }
+    }
+
+    private static String scalarValue(SnmpUtilV3 snmpUtilV3, int[] oid) {
+        try {
+            List<SnmpOID> request = new ArrayList<SnmpOID>();
+            request.add(new SnmpOID(oid));
+            List<SnmpVarBind> values = snmpUtilV3.snmpGet(request);
+            if (values == null || values.isEmpty()) return "";
+            SnmpVarBind value = values.get(0);
+            return value.getError() == 0 && value.getVar() != null ? value.getVar().toString() : "";
+        }
+        catch (Exception ignored) {
+            return "";
         }
     }
 
@@ -531,6 +540,10 @@ public final class TopologyDiscoveryV7 {
         return string2.contains("fabricengine") || string2.contains("fabric engine") || string2.contains("voss") || string2.contains("virtual services platform") || string2.matches(".*\\bvsp[- ]?[0-9].*");
     }
 
+    private static boolean rapidCitySystem(String sysObjectId) {
+        return TopologyDiscoveryV7.clean(sysObjectId).startsWith("1.3.6.1.4.1.2272.");
+    }
+
     public static String ipv4FromManagementSuffix(int[] nArray) {
         if (nArray == null || nArray.length < 9) {
             return "";
@@ -703,6 +716,7 @@ public final class TopologyDiscoveryV7 {
         Credential credential;
         String name;
         String sysDescr;
+        String sysObjectId;
 
         private SessionMatch() {
         }

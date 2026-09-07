@@ -1,3 +1,8 @@
+# FabricNavigator 26.09.10.295
+
+- Makes vIST discovery tolerant of partially implemented scalar responses and identifies Fabric Engine devices through the Rapid-City enterprise OID in addition to `sysDescr`.
+- Restores link-detail mouseover handling by binding hover events directly to newly rendered links and port labels.
+
 # FabricNavigator 26.09.10.294
 
 - Restores the Administration → System page by removing a stale OpenAPI settings fragment that still referenced a retired server-side method. Device API preferences remain available in Administration → General.
