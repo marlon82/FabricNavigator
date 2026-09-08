@@ -17,9 +17,17 @@ public final class FeatureFlags {
     private FeatureFlags(){}
 
     public static synchronized boolean configurationBackupEnabled(){
+        return enabled("configurationBackup");
+    }
+
+    public static synchronized boolean firmwareLifecycleEnabled(){
+        return enabled("firmwareLifecycle");
+    }
+
+    private static boolean enabled(String key){
         Properties values=new Properties();
         if(Files.isRegularFile(FILE))try(InputStream input=Files.newInputStream(FILE)){values.load(input);}catch(Exception ignored){}
-        return Boolean.parseBoolean(values.getProperty("configurationBackup","false"));
+        return Boolean.parseBoolean(values.getProperty(key,"false"));
     }
 
     public static synchronized void enableConfigurationBackup() throws Exception {
@@ -30,10 +38,22 @@ public final class FeatureFlags {
         setConfigurationBackupEnabled(false);
     }
 
+    public static synchronized void enableFirmwareLifecycle() throws Exception {
+        setEnabled("firmwareLifecycle",true);
+    }
+
+    public static synchronized void disableFirmwareLifecycle() throws Exception {
+        setEnabled("firmwareLifecycle",false);
+    }
+
     private static void setConfigurationBackupEnabled(boolean enabled) throws Exception {
+        setEnabled("configurationBackup",enabled);
+    }
+
+    private static void setEnabled(String key,boolean enabled) throws Exception {
         Properties values=new Properties();
         if(Files.isRegularFile(FILE))try(InputStream input=Files.newInputStream(FILE)){values.load(input);}
-        values.setProperty("configurationBackup",Boolean.toString(enabled));
+        values.setProperty(key,Boolean.toString(enabled));
         Files.createDirectories(FILE.getParent());
         Path temporary=Files.createTempFile(FILE.getParent(),"features.",".tmp");
         try{
@@ -53,7 +73,22 @@ public final class FeatureFlags {
         return true;
     }
 
+    public static String unlockFeature(String password) throws Exception {
+        byte[] supplied=(password==null?"":password).getBytes(StandardCharsets.UTF_8);
+        String backupPassword=System.getenv("FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD");
+        if(backupPassword==null||backupPassword.length()==0)backupPassword="CONFIGBACKUP";
+        String firmwarePassword=System.getenv("FABRICNAVIGATOR_FIRMWARE_UPDATE_UNLOCK_PASSWORD");
+        if(firmwarePassword==null||firmwarePassword.length()==0)firmwarePassword="FIRMWAREUPDATE";
+        if(MessageDigest.isEqual(supplied,backupPassword.getBytes(StandardCharsets.UTF_8))){enableConfigurationBackup();return "configurationBackup";}
+        if(MessageDigest.isEqual(supplied,firmwarePassword.getBytes(StandardCharsets.UTF_8))){enableFirmwareLifecycle();return "firmwareLifecycle";}
+        return "";
+    }
+
     public static void requireConfigurationBackup(){
         if(!configurationBackupEnabled())throw new SecurityException("Configuration backup feature is not enabled");
+    }
+
+    public static void requireFirmwareLifecycle(){
+        if(!firmwareLifecycleEnabled())throw new SecurityException("Firmware lifecycle feature is not enabled");
     }
 }

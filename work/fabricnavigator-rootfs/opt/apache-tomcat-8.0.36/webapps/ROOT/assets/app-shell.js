@@ -1,5 +1,5 @@
 (function(){'use strict';if(window.__fabricNavigatorShellV170)return;window.__fabricNavigatorShellV170=true;
-var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.299',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnVistClusterFrames','fnSpbmAreaFrames','fnAdminTab','fnAdminCredentialTab','fnAdminGeneralTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
+var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.302',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnVistClusterFrames','fnSpbmAreaFrames','fnAdminTab','fnAdminCredentialTab','fnAdminGeneralTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
 if(location.pathname.indexOf('/admin/')===0)document.documentElement.dataset.app='fabricnavigator-admin';
 if(location.pathname==='/devices/'||location.pathname==='/devices/index.jsp'){var obsoleteDeviceForm=document.getElementById('device-form'),obsoleteDeviceCard=obsoleteDeviceForm&&obsoleteDeviceForm.closest('aside.card');if(obsoleteDeviceCard)obsoleteDeviceCard.remove();}
 function saved(key){try{return localStorage.getItem(key);}catch(e){return null;}}
@@ -288,6 +288,13 @@ if(document.documentElement.classList.contains('fn-shell-loading')){var revealSt
   new MutationObserver(function(records){records.forEach(function(record){if(record.type==='childList'||record.attributeName==='hidden')sync();});}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden']});sync();
  }
  if(location.pathname==='/admin/')window.addEventListener('message',function(event){if(event.origin!==location.origin||!event.data||event.data.type!=='fn-update-fullscreen')return;var frame=document.querySelector('.fn-update-admin-panel .fn-admin-system-frame');if(!frame||event.source!==frame.contentWindow)return;document.documentElement.classList.toggle('fn-update-fullscreen',!!event.data.active);document.body.classList.toggle('fn-update-fullscreen',!!event.data.active);});
+}());
+
+/* Feature-dependent Firmware & Lifecycle entry in the central navigation. */
+(function(){
+ var attempts=0;
+ function install(){var menu=document.querySelector('.fn-main-menu');if(!menu){if(++attempts<50)setTimeout(install,100);return;}fetch('/admin/feature-status.jsp?_='+Date.now(),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}).then(function(response){if(!response.ok)throw new Error();return response.json();}).then(function(features){if(!features.firmwareLifecycle)return;var existing=menu.querySelector('[href="/firmware/"]');if(existing){existing.hidden=false;return;}var link=document.createElement('a'),label=document.createElement('span'),admin=menu.querySelector('[href="/admin/"]');link.href='/firmware/';link.className='fn-main-nav-item';if(location.pathname.indexOf('/firmware/')===0)link.classList.add('active');link.title=(document.documentElement.lang||lang)==='de'?'Firmware- und Lifecycle-Management':'Firmware and lifecycle management';link.setAttribute('aria-label',link.title);link.innerHTML='<span class="fn-main-nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v7H5zM7 14h10v6H7zM8 7h8M10 17h4M12 11v3"/></svg></span>';label.className='fn-main-nav-label';label.textContent='Firmware';link.appendChild(label);menu.insertBefore(link,admin||null);}).catch(function(){if(++attempts<10)setTimeout(install,300);});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
 }());
 
 /* Cancellable first-run tour across the topology and device-assignment areas. */

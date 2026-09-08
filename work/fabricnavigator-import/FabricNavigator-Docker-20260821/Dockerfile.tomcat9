@@ -14,7 +14,7 @@ RUN set -eu; \
     test -n "$ecj_jar"; \
     ln -s "$(basename "$ecj_jar")" "/opt/apache-tomcat-${TOMCAT_VERSION}/lib/ecj-4.5.jar"; \
     sed -i 's/port="8080" protocol="HTTP\/1.1"/address="127.0.0.1" port="8081" protocol="HTTP\/1.1"/' "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/server.xml"; \
-    sed -i 's/connectionTimeout="20000"/connectionTimeout="20000" maxPostSize="2097152" proxyPort="443" scheme="https" secure="true" allowTrace="false" server="FabricNavigator"/' "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/server.xml"; \
+    sed -i 's/connectionTimeout="20000"/connectionTimeout="20000" maxPostSize="1074790400" proxyPort="443" scheme="https" secure="true" allowTrace="false" server="FabricNavigator"/' "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/server.xml"; \
     rm -f /opt/tomcat; \
     ln -s "/opt/apache-tomcat-${TOMCAT_VERSION}" /opt/tomcat; \
     install -d -o tomcat -g tomcat -m 0750 "/opt/apache-tomcat-${TOMCAT_VERSION}/conf/Catalina/localhost"; \

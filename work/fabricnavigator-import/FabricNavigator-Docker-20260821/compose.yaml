@@ -6,7 +6,7 @@ services:
       args:
         BASE_IMAGE: fabricnavigator:2026-08-21
         TOMCAT_VERSION: 9.0.121
-    image: fabricnavigator:26.09.10.299
+    image: fabricnavigator:26.09.10.302
     container_name: fabricnavigator
     entrypoint: ["/bin/sh", "/opt/fabricnavigator/fabricnavigator-entrypoint.sh"]
     restart: unless-stopped
@@ -14,8 +14,9 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.301"
+      FABRICNAVIGATOR_VERSION: "26.09.10.302"
       FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD:-CONFIGBACKUP}"
+      FABRICNAVIGATOR_FIRMWARE_UPDATE_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_FIRMWARE_UPDATE_UNLOCK_PASSWORD:-FIRMWAREUPDATE}"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
       FABRICNAVIGATOR_GITHUB_REPOSITORY: "${FABRICNAVIGATOR_GITHUB_REPOSITORY:-marlon82/FabricNavigator}"
       FABRICNAVIGATOR_GITHUB_TOKEN_FILE: "/run/secrets/github-update-token.txt"
@@ -37,6 +38,7 @@ services:
       - ./service-provision.pl:/opt/fabricnavigator/service-provision.pl:ro
       - ./service-openapi.py:/opt/fabricnavigator/service-openapi.py:ro
       - ./config-backup.pl:/opt/fabricnavigator/config-backup.pl:ro
+      - ./firmware-deploy.pl:/opt/fabricnavigator/firmware-deploy.pl:ro
       - ../../acli-src/opt/acli/acli.pl:/opt/acli/acli-terminal.pl:ro
       - ../../acli-src/opt/acli/AcliPm/HandleDeviceOutput.pm:/opt/acli/AcliPm/HandleDeviceOutput.pm:ro
       - ../../acli-src/opt/acli/AcliPm/ExitHandlers.pm:/opt/acli/AcliPm/ExitHandlers.pm:ro
@@ -53,6 +55,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/profile/index.jsp:/opt/tomcat/webapps/ROOT/profile/index.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/credits/index.jsp:/opt/tomcat/webapps/ROOT/credits/index.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/config-backups/index.jsp:/opt/tomcat/webapps/ROOT/config-backups/index.jsp:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/firmware/index.jsp:/opt/tomcat/webapps/ROOT/firmware/index.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/profile/plugin-status.jsp:/opt/tomcat/webapps/ROOT/profile/plugin-status.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/not-found.jsp:/opt/tomcat/webapps/ROOT/not-found.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/WEB-INF/web.xml:/opt/tomcat/webapps/ROOT/WEB-INF/web.xml:ro
@@ -85,6 +88,9 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.js:/opt/tomcat/webapps/ROOT/assets/app-shell.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/admin-device-api.js:/opt/tomcat/webapps/ROOT/assets/admin-device-api.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/system-features.js:/opt/tomcat/webapps/ROOT/assets/system-features.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-lifecycle.js:/opt/tomcat/webapps/ROOT/assets/firmware-lifecycle.js:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-lifecycle.css:/opt/tomcat/webapps/ROOT/assets/firmware-lifecycle.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-deployment.css:/opt/tomcat/webapps/ROOT/assets/firmware-deployment.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.css:/opt/tomcat/webapps/ROOT/assets/app-shell.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.js:/opt/tomcat/webapps/ROOT/assets/service-ui.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/config-backup-topology.js:/opt/tomcat/webapps/ROOT/assets/config-backup-topology.js:ro

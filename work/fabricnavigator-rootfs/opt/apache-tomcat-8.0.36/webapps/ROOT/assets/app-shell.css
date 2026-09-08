@@ -518,6 +518,20 @@ body,[data-app="fabricnavigator-devices"] body{font-size:12px!important}.hero h1
 .fn-topology-page #topology-graph .node>text:not(.sub):not(.edm-link){transform:translateY(-4px)}
 /* Floating topology command dock and stable navigation geometry. */
 @media(min-width:901px){.fn-main-menu a.fn-main-nav-item{box-sizing:border-box!important;flex:0 0 164px!important;width:164px!important;min-width:164px!important;justify-content:flex-start!important;padding-right:13px!important;gap:12px!important}}
+/* Keep feature-dependent navigation on one row. The previous 420 px logo
+   column left unused space while Backup and Firmware forced the account,
+   language, and theme controls onto a second row. */
+@media(min-width:901px){
+  .header-inner:has(>.fn-main-menu),.topbar-inner:has(>.fn-main-menu){grid-template-columns:250px minmax(0,1fr)!important;width:min(100% - 32px,1600px)!important}
+  .header-inner:has(>.fn-main-menu)>.fn-main-menu,.topbar-inner:has(>.fn-main-menu)>.fn-main-menu{flex-wrap:nowrap!important;gap:7px!important}
+  .fn-main-menu a.fn-main-nav-item{flex-basis:150px!important;width:150px!important;min-width:150px!important}
+  .fn-main-menu .fn-account-menu{margin-left:auto!important}
+}
+@media(min-width:901px) and (max-width:1399px){
+  .header-inner:has(>.fn-main-menu),.topbar-inner:has(>.fn-main-menu){grid-template-columns:220px minmax(0,1fr)!important}
+  .fn-main-menu a.fn-main-nav-item{flex-basis:auto!important;width:auto!important;min-width:42px!important;padding-right:8px!important;gap:7px!important}
+  .fn-main-nav-label{font-size:10px!important}
+}
 .fn-admin-tabs{box-sizing:border-box!important;min-height:54px!important;max-height:54px!important;overflow-y:hidden!important;scrollbar-width:none}.fn-admin-tabs::-webkit-scrollbar{display:none!important}.fn-admin-subtabs{box-sizing:border-box!important;min-height:54px!important}.fn-admin-tab,.fn-admin-subtab{box-sizing:border-box!important;line-height:20px!important}
 .fn-topology-workspace-v2 .fn-topology-page .fn-topology-frame>.fn-topology-tools{position:absolute!important;z-index:84;top:24px;left:50%;width:min(1120px,calc(100% - 34px))!important;min-height:50px!important;margin:0!important;padding:6px 8px!important;transform:translateX(-50%);flex-wrap:nowrap!important;border-color:color-mix(in srgb,var(--fn-accent) 52%,var(--fn-border))!important;background:color-mix(in srgb,var(--fn-panel) 91%,transparent)!important;box-shadow:0 12px 30px rgba(10,16,35,.2)!important;backdrop-filter:blur(14px)}
 .fn-topology-workspace-v2 .fn-topology-page .fn-topology-frame>.fn-topology-tools>.fn-topology-search{flex:1 1 auto!important;min-width:0!important}.fn-topology-workspace-v2 .fn-topology-page .graph-panel.fn-topology-canvas .fn-topology-search input{flex:1 1 260px!important;width:auto!important;max-width:410px}.fn-topology-workspace-v2 .fn-topology-page .fn-topology-frame>.fn-topology-tools>.fn-topology-command-actions{flex:0 0 auto!important;margin-left:auto!important}

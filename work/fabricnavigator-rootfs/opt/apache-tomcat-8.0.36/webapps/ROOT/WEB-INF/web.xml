@@ -9,9 +9,11 @@
   <servlet><servlet-name>jsp</servlet-name><servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class><init-param><param-name>fork</param-name><param-value>false</param-value></init-param><init-param><param-name>xpoweredBy</param-name><param-value>false</param-value></init-param><load-on-startup>3</load-on-startup></servlet>
   <servlet><servlet-name>fabricNavigatorSessionsApi</servlet-name><jsp-file>/api-sessions.jsp</jsp-file><load-on-startup>4</load-on-startup></servlet>
   <servlet><servlet-name>fabricNavigatorConfigurationArchive</servlet-name><servlet-class>com.fabricnavigator.backup.ConfigurationArchiveServlet</servlet-class></servlet>
+  <servlet><servlet-name>fabricNavigatorFirmwareManagement</servlet-name><servlet-class>com.fabricnavigator.firmware.FirmwareManagementServlet</servlet-class><multipart-config><location>/tmp</location><max-file-size>1073741824</max-file-size><max-request-size>1074790400</max-request-size><file-size-threshold>1048576</file-size-threshold></multipart-config></servlet>
   <servlet-mapping><servlet-name>jsp</servlet-name><url-pattern>*.jsp</url-pattern></servlet-mapping>
   <servlet-mapping><servlet-name>fabricNavigatorSessionsApi</servlet-name><url-pattern>/api/v1/sessions</url-pattern></servlet-mapping>
   <servlet-mapping><servlet-name>fabricNavigatorConfigurationArchive</servlet-name><url-pattern>/admin/configuration-archive</url-pattern></servlet-mapping>
+  <servlet-mapping><servlet-name>fabricNavigatorFirmwareManagement</servlet-name><url-pattern>/firmware/manage</url-pattern></servlet-mapping>
   <session-config><session-timeout>30</session-timeout><cookie-config><http-only>true</http-only><secure>true</secure></cookie-config></session-config>
   <welcome-file-list><welcome-file>index.jsp</welcome-file></welcome-file-list>
   <error-page><error-code>404</error-code><location>/not-found.jsp</location></error-page>

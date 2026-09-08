@@ -17,6 +17,8 @@ ACLI_CONFIG="$DATA_DIR/acli.ini"
 ACLI_LOG_DIR="$DATA_DIR/acli-logs"
 API_DATA_DIR="$DATA_DIR/api"
 CONFIG_BACKUP_DIR="$DATA_DIR/config-backups"
+FIRMWARE_PACKAGE_DIR="$DATA_DIR/firmware-packages"
+FEATURE_FILE="$DATA_DIR/features.properties"
 TERMINAL_RUN_DIR="${FABRICNAVIGATOR_TERMINAL_RUN_DIR:-/opt/tomcat/run/edm-terminal}"
 mkdir -p "$UPDATE_DIR"
 # The directory contains only update requests and public release metadata. It
@@ -29,7 +31,11 @@ mkdir -p "$DATA_DIR"
 mkdir -p "$ACLI_LOG_DIR"
 mkdir -p "$API_DATA_DIR"
 mkdir -p "$CONFIG_BACKUP_DIR"
+mkdir -p "$FIRMWARE_PACKAGE_DIR"
 mkdir -p "$TERMINAL_RUN_DIR"
+if [ -f /opt/tomcat/conf/server.xml ]; then
+  sed -i 's/maxPostSize="2097152"/maxPostSize="1074790400"/g' /opt/tomcat/conf/server.xml 2>/dev/null || true
+fi
 if [ ! -f "$ACLI_CONFIG" ]; then
   cp /opt/acli-web/acli-default.ini "$ACLI_CONFIG"
 fi
@@ -47,6 +53,15 @@ chown -R tomcat:tomcat "$API_DATA_DIR" 2>/dev/null || true
 chmod 0700 "$API_DATA_DIR" 2>/dev/null || true
 chown -R tomcat:tomcat "$CONFIG_BACKUP_DIR" 2>/dev/null || true
 chmod 0700 "$CONFIG_BACKUP_DIR" 2>/dev/null || true
+chown -R tomcat:tomcat "$FIRMWARE_PACKAGE_DIR" 2>/dev/null || true
+chmod 0700 "$FIRMWARE_PACKAGE_DIR" 2>/dev/null || true
+# Older builds and maintenance commands may have created the shared feature
+# configuration as root. Both feature unlocks use this file, so repair its
+# owner without weakening the file permissions.
+if [ -f "$FEATURE_FILE" ]; then
+  chown tomcat:tomcat "$FEATURE_FILE" 2>/dev/null || true
+  chmod 0600 "$FEATURE_FILE" 2>/dev/null || true
+fi
 chown -R tomcat:tomcat "$(dirname "$TERMINAL_RUN_DIR")" 2>/dev/null || true
 chmod 0750 "$(dirname "$TERMINAL_RUN_DIR")" 2>/dev/null || true
 chmod 0700 "$TERMINAL_RUN_DIR" 2>/dev/null || true
