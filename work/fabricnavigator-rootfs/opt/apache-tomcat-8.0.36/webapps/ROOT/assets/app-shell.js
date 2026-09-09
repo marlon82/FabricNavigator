@@ -1,8 +1,8 @@
 (function(){'use strict';if(window.__fabricNavigatorShellV170)return;window.__fabricNavigatorShellV170=true;
-var fnSessionTimer=0,fnSessionRedirecting=false;
+var fnSessionTimer=0,fnSessionRedirecting=false,fnSessionMonitoringEnabled=!(/^\/(?:login(?:\.jsp)?|setup(?:\.jsp)?)(?:\/|$)/.test(location.pathname));
 function fnSessionNext(){try{var target=window.top||window;return target.location.pathname+target.location.search+target.location.hash;}catch(ignore){return location.pathname+location.search+location.hash;}}
 function fnShowLogin(){
- if(fnSessionRedirecting)return;fnSessionRedirecting=true;clearTimeout(fnSessionTimer);
+ if(!fnSessionMonitoringEnabled||fnSessionRedirecting)return;fnSessionRedirecting=true;clearTimeout(fnSessionTimer);
  var login='/login.jsp?next='+encodeURIComponent(fnSessionNext());
  try{var target=window.top||window;if(typeof target.fnAllowTopologyUnload==='function')target.fnAllowTopologyUnload();target.location.replace(login);}catch(ignore){location.replace(login);}
 }
@@ -17,12 +17,12 @@ function fnObserveSessionResponse(response){
  if(expired||redirectedToLogin)fnShowLogin();else fnScheduleSessionExpiry(response.headers.get('X-FabricNavigator-Session-Timeout'));
  return response;
 }
-if(window.fetch){var fnNativeFetch=window.fetch.bind(window);window.fetch=function(input,init){return fnNativeFetch(input,init).then(fnObserveSessionResponse);};}
-if(window.XMLHttpRequest){
+if(fnSessionMonitoringEnabled&&window.fetch){var fnNativeFetch=window.fetch.bind(window);window.fetch=function(input,init){return fnNativeFetch(input,init).then(fnObserveSessionResponse);};}
+if(fnSessionMonitoringEnabled&&window.XMLHttpRequest){
  var fnNativeXhrSend=window.XMLHttpRequest.prototype.send;
  window.XMLHttpRequest.prototype.send=function(){var xhr=this;xhr.addEventListener('loadend',function(){var expired='',timeout='';try{expired=xhr.getResponseHeader('X-FabricNavigator-Session-Expired');timeout=xhr.getResponseHeader('X-FabricNavigator-Session-Timeout');}catch(ignore){}if(expired==='true')fnShowLogin();else fnScheduleSessionExpiry(timeout);},{once:true});return fnNativeXhrSend.apply(xhr,arguments);};
 }
-var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.305',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnVistClusterFrames','fnSpbmAreaFrames','fnAdminTab','fnAdminCredentialTab','fnAdminGeneralTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
+var LANG_KEY='edmLanguage',THEME_KEY='edmTheme',SSH_STATE_KEY='fnSshState',TOOLBAR_KEY='fnSshToolbar',BUILD_VERSION='26.09.10.306',PREFERENCE_KEYS=[LANG_KEY,THEME_KEY,SSH_STATE_KEY,TOOLBAR_KEY,'fnSshFontSize','fnConnectionsCollapsed','edmSavedTopologiesV1','edmDefaultTopologyV1','fnNodeLabel','fnVistClusterFrames','fnSpbmAreaFrames','fnAdminTab','fnAdminCredentialTab','fnAdminGeneralTab','fnAdminDesignTab','fnProfileDesignTab','fnExtremeSwitchImages','fnTopologyGroupsV1'],preferenceCsrf='',preferenceReady=false,preferenceTimer=null,preferenceLoadPromise=null;
 if(location.pathname.indexOf('/admin/')===0)document.documentElement.dataset.app='fabricnavigator-admin';
 if(location.pathname==='/devices/'||location.pathname==='/devices/index.jsp'){var obsoleteDeviceForm=document.getElementById('device-form'),obsoleteDeviceCard=obsoleteDeviceForm&&obsoleteDeviceForm.closest('aside.card');if(obsoleteDeviceCard)obsoleteDeviceCard.remove();}
 function saved(key){try{return localStorage.getItem(key);}catch(e){return null;}}

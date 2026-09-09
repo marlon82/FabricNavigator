@@ -21,4 +21,43 @@ if("POST".equalsIgnoreCase(request.getMethod())){
   catch(Exception ex){response.setStatus(500);error="Die Anmeldung ist momentan nicht verfügbar.";}
  }
 }
-%><!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Anmeldung · FabricNavigator</title><script>(function(){if(window.top!==window.self){var destination='/';try{destination=window.top.location.pathname+window.top.location.search+window.top.location.hash;if(window.top.fnAllowTopologyUnload)window.top.fnAllowTopologyUnload();}catch(ignored){}window.top.location.replace('/login.jsp?next='+encodeURIComponent(destination));return;}try{document.documentElement.setAttribute("data-theme",localStorage.getItem("edmTheme")||((window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"));}catch(e){document.documentElement.setAttribute("data-theme","light");}}());</script><link rel="icon" type="image/png" href="/assets/FabricNavigator_modern_favicon.png"><link rel="stylesheet" href="/assets/security.css?v=20260825-146"></head><body class="auth-page"><main class="auth-card"><img src="/assets/FabricNavigator_modern_schwarz.png" alt="FabricNavigator" class="auth-logo auth-logo-light"><img src="/assets/FabricNavigator_modern.png" alt="FabricNavigator" class="auth-logo auth-logo-dark"><h1>Anmelden</h1><p class="muted">Lokale, geschützte Anmeldung für Topologie, Geräteverwaltung und Webterminal.</p><%if(error.length()>0){%><div class="alert error" role="alert"><%=error%></div><%}%><form method="post" autocomplete="on"><input type="hidden" name="csrfToken" value="<%=csrf%>"><input type="hidden" name="next" value="<%=next.replace("&","&amp;").replace("\"","&quot;")%>"><label>Benutzername<input name="username" required maxlength="32" autocomplete="username" autofocus></label><label>Passwort<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label><button type="submit">Anmelden</button></form></main></body></html>
+%><!doctype html>
+<html lang="de">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>Anmeldung · FabricNavigator</title>
+ <script>(function(){
+  if(window.top!==window.self&&document.referrer){
+   try{
+    var source=new URL(document.referrer,location.href);
+    if(source.origin===location.origin&&source.pathname!=='/login.jsp'&&source.pathname!=='/login'){
+     var destination=source.pathname+source.search+source.hash;
+     if(window.top.fnAllowTopologyUnload)window.top.fnAllowTopologyUnload();
+     window.top.location.replace('/login.jsp?next='+encodeURIComponent(destination));return;
+    }
+   }catch(ignored){}
+  }
+  try{document.documentElement.setAttribute("data-theme",localStorage.getItem("edmTheme")||((window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"));}
+  catch(e){document.documentElement.setAttribute("data-theme","light");}
+ }());</script>
+ <link rel="icon" type="image/png" href="/assets/FabricNavigator_modern_favicon.png">
+ <link rel="stylesheet" href="/assets/security.css?v=20260825-146">
+</head>
+<body class="auth-page">
+ <main class="auth-card">
+  <img src="/assets/FabricNavigator_modern_schwarz.png" alt="FabricNavigator" class="auth-logo auth-logo-light">
+  <img src="/assets/FabricNavigator_modern.png" alt="FabricNavigator" class="auth-logo auth-logo-dark">
+  <h1>Anmelden</h1>
+  <p class="muted">Lokale, geschützte Anmeldung für Topologie, Geräteverwaltung und Webterminal.</p>
+  <%if(error.length()>0){%><div class="alert error" role="alert"><%=error%></div><%}%>
+  <form method="post" autocomplete="on">
+   <input type="hidden" name="csrfToken" value="<%=csrf%>">
+   <input type="hidden" name="next" value="<%=next.replace("&","&amp;").replace("\"","&quot;")%>">
+   <label>Benutzername<input name="username" required maxlength="32" autocomplete="username" autofocus></label>
+   <label>Passwort<input name="password" type="password" required maxlength="128" autocomplete="current-password"></label>
+   <button type="submit">Anmelden</button>
+  </form>
+ </main>
+</body>
+</html>
