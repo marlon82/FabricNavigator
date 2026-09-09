@@ -123,6 +123,9 @@ try {
         (Join-Path $acliRoot 'acli-web\pty_bridge.py') = 'opt/acli-web/pty_bridge.py'
         (Join-Path $sourceRoot 'src\java') = 'opt/fabricnavigator/snmp-src'
         (Join-Path $sourceRoot 'third_party\snmp4j\snmp4j-2.8.18.jar') = 'opt/fabricnavigator/snmp4j-2.8.18.jar'
+        (Join-Path $sourceRoot 'third_party\pdfbox\pdfbox-app-2.0.37.jar') = 'opt/fabricnavigator/pdfbox-app.jar'
+        (Join-Path $sourceRoot 'third_party\pdfbox\LICENSE.txt') = 'opt/fabricnavigator/licenses/PDFBOX-LICENSE-2.0.txt'
+        (Join-Path $sourceRoot 'third_party\pdfbox\NOTICE.txt') = 'opt/fabricnavigator/licenses/PDFBOX-NOTICE.txt'
         (Join-Path $sourceRoot 'third_party\snmp4j\LICENSE-2.0.txt') = 'opt/fabricnavigator/licenses/SNMP4J-LICENSE-2.0.txt'
         (Join-Path $sourceRoot 'third_party\acli\LICENSE-GPL-3.0.txt') = 'opt/fabricnavigator/licenses/ACLI-LICENSE-GPL-3.0.txt'
         (Join-Path $sourceRoot 'third_party\xtermjs\LICENSE-MIT.txt') = 'opt/fabricnavigator/licenses/XTERMJS-LICENSE-MIT.txt'
@@ -138,7 +141,7 @@ try {
         'assets\switch-front-universal.svg', 'assets\switch-front-fabric.svg',
         'assets\switch-front-switchengine.svg', 'assets\switch-front-ers.svg', 'assets\generic-phone.png',
         'assets\generic-switch.png', 'assets\generic-wlan-ap.png', 'assets\generic-firewall.png',
-        'assets\topology-group.svg', 'assets\service-ui.js', 'assets\service-ui.css', 'assets\config-backup-topology.js', 'assets\system-features.js', 'assets\firmware-lifecycle.js', 'assets\firmware-lifecycle.css', 'assets\firmware-deployment.css', 'assets\update-channel.js', 'assets\offline-packages.js', 'assets\user-profile.js', 'assets\user-profile.css'
+        'assets\topology-group.svg', 'assets\service-ui.js', 'assets\service-ui.css', 'assets\config-backup-topology.js', 'assets\system-features.js', 'assets\firmware-lifecycle.js', 'assets\firmware-lifecycle.css', 'assets\firmware-release-notes.css', 'assets\firmware-deployment.css', 'assets\update-channel.js', 'assets\offline-packages.js', 'assets\user-profile.js', 'assets\user-profile.css'
     )) {
         $overlay[(Join-Path $webRoot $relative)] = 'opt/tomcat/webapps/ROOT/' + $relative.Replace('\', '/')
     }

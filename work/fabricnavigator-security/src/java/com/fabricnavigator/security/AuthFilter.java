@@ -72,7 +72,16 @@ public final class AuthFilter implements Filter {
             if (user == null) {
                 String next = request.getRequestURI();
                 if (request.getQueryString() != null && request.getQueryString().length() < 512) next += "?" + request.getQueryString();
-                response.sendRedirect(requestBase(request) + "/login.jsp?next=" + URLEncoder.encode(next, "UTF-8"));
+                String login = requestBase(request) + "/login.jsp?next=" + URLEncoder.encode(next, "UTF-8");
+                response.setHeader("X-FabricNavigator-Session-Expired", "true");
+                response.setHeader("X-FabricNavigator-Login", login);
+                if (expectsDocument(request)) {
+                    response.sendRedirect(login);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json; charset=UTF-8");
+                    response.getWriter().write("{\"authenticated\":false,\"error\":\"sessionExpired\"}");
+                }
                 return;
             }
             if (isUnsafe(request.getMethod()) && !validSameOrigin(request)) {
@@ -81,7 +90,9 @@ public final class AuthFilter implements Filter {
             }
             if (path.startsWith("/admin") && !"ADMIN".equals(user.role)) { response.sendError(403); return; }
             HttpSession session = existingSession == null ? request.getSession(true) : existingSession;
-            session.setMaxInactiveInterval(configuredTimeoutSeconds());
+            int configuredTimeout = configuredTimeoutSeconds();
+            session.setMaxInactiveInterval(configuredTimeout);
+            response.setHeader("X-FabricNavigator-Session-Timeout", Integer.toString(configuredTimeout));
             session.setAttribute("edm.auth.user", user.username);
             session.setAttribute("edm.auth.role", user.role);
             request.setAttribute("edm.auth.user", user);
@@ -135,6 +146,11 @@ public final class AuthFilter implements Filter {
         try{URI uri=new URI(value.trim());String scheme=uri.getScheme(),host=uri.getHost();if(scheme==null||host==null||uri.getUserInfo()!=null||uri.getRawQuery()!=null||uri.getRawFragment()!=null)return"";scheme=scheme.toLowerCase(Locale.ENGLISH);if(!"https".equals(scheme)&&!"http".equals(scheme))return"";String path=uri.getRawPath();if(path!=null&&path.length()>0&&!"/".equals(path))return"";int port=uri.getPort();boolean standard=port<0||("https".equals(scheme)&&port==443)||("http".equals(scheme)&&port==80);host=host.toLowerCase(Locale.ENGLISH);if(host.indexOf(':')>=0)host="["+host+"]";return scheme+"://"+host+(standard?"":":"+port);}catch(Exception ignored){return"";}
     }
     private static boolean isUnsafe(String method){return!"GET".equals(method)&&!"HEAD".equals(method)&&!"OPTIONS".equals(method);}
+    private static boolean expectsDocument(HttpServletRequest request){
+        String destination=request.getHeader("Sec-Fetch-Dest"),mode=request.getHeader("Sec-Fetch-Mode"),requestedWith=request.getHeader("X-Requested-With"),accept=request.getHeader("Accept");
+        if("document".equalsIgnoreCase(destination)||"iframe".equalsIgnoreCase(destination)||"navigate".equalsIgnoreCase(mode))return true;
+        return "GET".equals(request.getMethod())&&!("XMLHttpRequest".equalsIgnoreCase(requestedWith))&&accept!=null&&accept.toLowerCase(Locale.ENGLISH).contains("text/html");
+    }
     private static boolean isAsset(String path){return path.startsWith("/assets/")||"/favicon.ico".equals(path);}
     private static boolean isSetup(String path){return"/setup.jsp".equals(path)||"/setup".equals(path);}
     private static boolean isLogin(String path){return"/login.jsp".equals(path)||"/login".equals(path);}

@@ -6,7 +6,7 @@ services:
       args:
         BASE_IMAGE: fabricnavigator:2026-08-21
         TOMCAT_VERSION: 9.0.121
-    image: fabricnavigator:26.09.10.302
+    image: fabricnavigator:26.09.10.305
     container_name: fabricnavigator
     entrypoint: ["/bin/sh", "/opt/fabricnavigator/fabricnavigator-entrypoint.sh"]
     restart: unless-stopped
@@ -14,7 +14,7 @@ services:
       - NET_ADMIN
     environment:
       FABRICNAVIGATOR_HTTPS_PORT: "8443"
-      FABRICNAVIGATOR_VERSION: "26.09.10.302"
+      FABRICNAVIGATOR_VERSION: "26.09.10.305"
       FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_CONFIG_BACKUP_UNLOCK_PASSWORD:-CONFIGBACKUP}"
       FABRICNAVIGATOR_FIRMWARE_UPDATE_UNLOCK_PASSWORD: "${FABRICNAVIGATOR_FIRMWARE_UPDATE_UNLOCK_PASSWORD:-FIRMWAREUPDATE}"
       FABRICNAVIGATOR_IMAGE_REVISION: "20260825-115-dev"
@@ -47,6 +47,7 @@ services:
       - ./acli-default.ini:/opt/acli-web/acli-default.ini:ro
       - ../../../src/java:/opt/fabricnavigator/snmp-src:ro
       - ../../../third_party/snmp4j/snmp4j-2.8.18.jar:/opt/fabricnavigator/snmp4j-2.8.18.jar:ro
+      - ../../../third_party/pdfbox/pdfbox-app-2.0.37.jar:/opt/fabricnavigator/pdfbox-app.jar:ro
       - ../../fabricnavigator-security/fabricnavigator-security.jar:/opt/tomcat/lib/fabricnavigator-security.jar:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/terminal/index.jsp:/opt/tomcat/webapps/ROOT/terminal/index.jsp:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/webview-ticket.jsp:/opt/tomcat/webapps/ROOT/webview-ticket.jsp:ro
@@ -90,6 +91,7 @@ services:
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/system-features.js:/opt/tomcat/webapps/ROOT/assets/system-features.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-lifecycle.js:/opt/tomcat/webapps/ROOT/assets/firmware-lifecycle.js:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-lifecycle.css:/opt/tomcat/webapps/ROOT/assets/firmware-lifecycle.css:ro
+      - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-release-notes.css:/opt/tomcat/webapps/ROOT/assets/firmware-release-notes.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/firmware-deployment.css:/opt/tomcat/webapps/ROOT/assets/firmware-deployment.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/app-shell.css:/opt/tomcat/webapps/ROOT/assets/app-shell.css:ro
       - ../../fabricnavigator-rootfs/opt/apache-tomcat-8.0.36/webapps/ROOT/assets/service-ui.js:/opt/tomcat/webapps/ROOT/assets/service-ui.js:ro

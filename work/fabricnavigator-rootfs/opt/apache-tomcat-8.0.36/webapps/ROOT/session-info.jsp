@@ -3,5 +3,5 @@ private static String j(String value){if(value==null)return "";return value.repl
 %><%
 response.setHeader("Cache-Control","no-store");response.setHeader("X-Content-Type-Options","nosniff");String user=EdmSecurity.currentUser(request);
 if(user==null||user.length()==0){response.setStatus(401);out.print("{\"authenticated\":false}");return;}
-out.print("{\"authenticated\":true,\"user\":\""+j(user)+"\",\"role\":\""+(EdmSecurity.isAdmin(request)?"admin":"user")+"\"}");
+out.print("{\"authenticated\":true,\"user\":\""+j(user)+"\",\"role\":\""+(EdmSecurity.isAdmin(request)?"admin":"user")+"\",\"timeoutSeconds\":"+session.getMaxInactiveInterval()+"}");
 %>

@@ -1,0 +1,61 @@
+.fn-release-notes-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, .55fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.fn-release-notes-layout .fn-policy-form {
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  margin-top: 0;
+  padding: 14px;
+  border: 1px solid var(--fn-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--fn-accent) 3%, var(--fn-panel));
+}
+.fn-release-notes-layout .fn-policy-form label.wide { grid-column: span 2; }
+.fn-release-notes-layout input[type=file] { height: auto; min-height: 39px; padding: 7px 9px; }
+.fn-official-release-links {
+  padding: 14px;
+  border: 1px solid var(--fn-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--fn-accent) 5%, var(--fn-panel));
+  color: var(--fn-text);
+}
+.fn-official-release-links > strong { display: block; margin-bottom: 6px; }
+.fn-official-release-links p { margin: 0 0 10px; color: var(--fn-muted); font-size: 10px; line-height: 1.5; }
+.fn-official-release-links div { display: flex; flex-wrap: wrap; gap: 7px; }
+.fn-official-release-links a,
+.fn-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 31px;
+  padding: 0 10px;
+  border: 1px solid var(--fn-accent);
+  border-radius: 8px;
+  color: var(--fn-accent);
+  font-size: 10px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.fn-release-notes-table { margin-top: 12px; }
+.fn-release-notes-table td small,
+.fn-package-table td small,
+.fn-policy-table td small { display: block; margin-top: 3px; color: var(--fn-muted); line-height: 1.35; }
+.fn-release-notes-table .fn-package-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.fn-release-notes-table .fn-package-actions button { min-height: 31px; padding: 0 10px; }
+.fn-release-notes-card .fn-inline-status:not(:empty) {
+  margin: 10px 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--fn-accent) 7%, var(--fn-panel));
+}
+@media (max-width: 900px) {
+  .fn-release-notes-layout { grid-template-columns: 1fr; }
+  .fn-release-notes-layout .fn-policy-form { grid-template-columns: 1fr 1fr; }
+  .fn-release-notes-layout .fn-policy-form label.wide { grid-column: span 2; }
+}
+@media (max-width: 560px) {
+  .fn-release-notes-layout .fn-policy-form { grid-template-columns: 1fr; }
+  .fn-release-notes-layout .fn-policy-form label.wide { grid-column: auto; }
+}

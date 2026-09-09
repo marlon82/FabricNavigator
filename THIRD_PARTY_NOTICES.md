@@ -25,6 +25,19 @@ the original ACLI project.
 - Corresponding source and FabricNavigator integration changes are available
   in this repository at the tag matching each distributed release.
 
+## Apache PDFBox 2.0.37
+
+FabricNavigator uses the Apache PDFBox command-line application to extract text
+from administrator-provided firmware release-note PDFs. Extracted text is used to
+identify reviewable model and upgrade-path policies.
+
+- Project: https://pdfbox.apache.org/
+- License: Apache License 2.0
+- Bundled license and notice: `third_party/pdfbox/LICENSE.txt` and
+  `third_party/pdfbox/NOTICE.txt`
+- Artifact SHA-512 is recorded in
+  `third_party/pdfbox/pdfbox-app-2.0.37.jar.sha512`
+
 ## Extreme Networks product photographs
 
 Optional Extreme Networks product photographs are distributed separately from
