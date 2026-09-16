@@ -106,8 +106,8 @@ if (configured && FabricNavigatorApiToken.createdAt() > 0) {
   <section class="fn-api-card">
     <h2 data-de="Verwendung" data-en="Usage">Verwendung</h2>
     <pre><code>Authorization: Bearer fn_api_&hellip;&#10;Accept: application/json</code></pre>
-    <p data-de="Die Antwort enthält Gerätename, IP-Adresse, SSH-Port, Plattform, Gerätetyp, sysLocation, Softwareversion und die zugewiesenen SSH-Anmeldedaten. Geräte ohne aktiviertes SSH-Profil werden nicht exportiert."
-       data-en="The response includes device name, IP address, SSH port, platform, device type, sysLocation, software version, and the assigned SSH credentials. Devices without an enabled SSH profile are not exported.">
+    <p data-de="Die Antwort enthält Gerätename, IP-Adresse, SSH-Port, Plattform, Gerätetyp, sysLocation, Softwareversion, sysUptime und die zugewiesenen SSH-Anmeldedaten. Geräte ohne aktiviertes SSH-Profil werden nicht exportiert."
+       data-en="The response includes device name, IP address, SSH port, platform, device type, sysLocation, software version, sysUptime, and the assigned SSH credentials. Devices without an enabled SSH profile are not exported.">
        Die Antwort enthält Geräte-, Plattform-, Standort-, Software- und SSH-Daten.
     </p>
   </section>
