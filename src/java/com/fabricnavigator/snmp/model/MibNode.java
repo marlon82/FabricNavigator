@@ -16,6 +16,7 @@ public final class MibNode {
         Map<String, int[]> values = new LinkedHashMap<String, int[]>();
         put(values, "sysDescr", "1.3.6.1.2.1.1.1");
         put(values, "sysObjectID", "1.3.6.1.2.1.1.2");
+        put(values, "sysUpTime", "1.3.6.1.2.1.1.3");
         put(values, "sysName", "1.3.6.1.2.1.1.5");
         put(values, "sysLocation", "1.3.6.1.2.1.1.6");
         put(values, "rcChasModelName", "1.3.6.1.4.1.2272.1.4.67");

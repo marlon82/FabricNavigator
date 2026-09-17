@@ -119,6 +119,7 @@ public final class TopologyDiscoveryV7 {
                     node.status = "reachable";
                     node.name = TopologyDiscoveryV7.clean(sessionMatch.name).length() == 0 ? queueItem.ip : TopologyDiscoveryV7.clean(sessionMatch.name);
                     node.sysDescr = TopologyDiscoveryV7.clean(sessionMatch.sysDescr);
+                    node.sysUptime = TopologyDiscoveryV7.clean(sessionMatch.sysUptime);
                     node.credential = TopologyDiscoveryV7.safeCredentialLabel(sessionMatch.credential);
                     result.addDebug("device host=" + queueItem.ip + " event=identified name=\"" + node.name + "\" sysObjectId=\"" + TopologyDiscoveryV7.clean(sessionMatch.sysObjectId) + "\" fabricEngine=" + (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId)));
                     if (TopologyDiscoveryV7.fabricEngineSystem(node.sysDescr) || TopologyDiscoveryV7.rapidCitySystem(sessionMatch.sysObjectId) && !TopologyDiscoveryV7.ethernetRoutingSwitchSystem(node.sysDescr)) {
@@ -263,6 +264,14 @@ public final class TopologyDiscoveryV7 {
                         sessionMatch.name = stringArray[0];
                         sessionMatch.sysDescr = stringArray.length > 1 ? stringArray[1] : "";
                         sessionMatch.sysObjectId = stringArray.length > 2 ? stringArray[2] : "";
+                        try {
+                            String[] uptime = snmpUtilV3.getAttribute(new String[]{"sysUpTime.0"}, false);
+                            sessionMatch.sysUptime = uptime != null && uptime.length > 0 ? uptime[0] : "";
+                        }
+                        catch (Exception uptimeError) {
+                            sessionMatch.sysUptime = "";
+                            result.addDebug("snmp host=" + string + " event=sys-uptime-unavailable error=" + uptimeError.getClass().getSimpleName());
+                        }
                         result.addDebug("snmp host=" + string + " version=" + TopologyDiscoveryV7.safeCredentialLabel(credential) + " attempt=" + (n3 + 1) + " decision=accepted sysObjectId=\"" + TopologyDiscoveryV7.clean(sessionMatch.sysObjectId) + "\"");
                         return sessionMatch;
                     }
@@ -814,6 +823,7 @@ public final class TopologyDiscoveryV7 {
         public String name;
         public String chassis;
         public String sysDescr = "";
+        public String sysUptime = "";
         public String status = "unreachable";
         public String credential = "";
         public boolean vistActive;
@@ -857,6 +867,7 @@ public final class TopologyDiscoveryV7 {
         String name;
         String sysDescr;
         String sysObjectId;
+        String sysUptime;
 
         private SessionMatch() {
         }

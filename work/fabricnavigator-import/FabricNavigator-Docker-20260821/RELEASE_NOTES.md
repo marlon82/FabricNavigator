@@ -1,3 +1,3 @@
-# FabricNavigator 26.09.10.311
+# FabricNavigator 26.09.10.313
 
-- Added SNMP `sysUpTime.0` to every device exported by the FabricNavigator sessions API.
+- Discovery now captures and persists SNMP `sysUpTime.0` without allowing an unavailable uptime value to block otherwise successful device discovery.
